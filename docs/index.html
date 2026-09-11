@@ -5,84 +5,198 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>mqttc</title>
 <meta name="description" content="A small, fast, open source desktop MQTT client for macOS, Windows and Linux.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
+  /* Tokens mirror frontend/src/app.css and DESIGN.md: cream page, charcoal ink,
+     every grey is ink at an opacity, depth from hairlines rather than shadows. */
   :root {
-    color-scheme: light dark;
-    --bg: #fafaf9; --fg: #1c1917; --muted: #78716c; --card: #ffffff; --line: #e7e5e4;
-    --accent: #0f766e; --accent-fg: #ffffff;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root { --bg: #0c0a09; --fg: #f5f5f4; --muted: #a8a29e; --card: #1c1917; --line: #292524; --accent: #2dd4bf; --accent-fg: #042f2e; }
+    color-scheme: light;
+    --cream: #f7f4ed; --paper: #fcfbf8; --ink: #1c1c1c; --muted: #5f5f5d; --line: #eceae4;
+    --ok: #4a8a58; --warn: #b07a1e; --bad: #b4423a;
+    --brand: #c2613f;
+    --syn-key: #3f5f95; --syn-str: #3d7a4a; --syn-num: #9a6b12;
+    --shadow-soft: rgba(0, 0, 0, 0.1) 0 4px 12px;
+    --sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 720px; margin: 0 auto; padding: 64px 20px 48px; }
-  h1 { font-size: 2.6rem; margin: 0 0 8px; letter-spacing: -0.02em; }
-  .tag { color: var(--muted); font-size: 1.15rem; margin: 0 0 32px; }
-  .primary { display: inline-block; background: var(--accent); color: var(--accent-fg); text-decoration: none; font-weight: 600; padding: 14px 22px; border-radius: 10px; }
-  .primary small { display: block; font-weight: 400; opacity: .85; font-size: .85rem; }
-  .version { color: var(--muted); font-size: .9rem; margin: 12px 0 40px; }
-  h2 { font-size: 1.1rem; margin: 32px 0 12px; }
-  ul.dl { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
-  ul.dl li { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
-  ul.dl a { color: var(--accent); font-weight: 600; text-decoration: none; }
-  ul.dl span { color: var(--muted); font-size: .9rem; }
-  code { font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: .9em; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
-  pre { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; overflow-x: auto; }
-  pre code { border: 0; padding: 0; background: none; }
-  .note { color: var(--muted); font-size: .95rem; }
-  footer { margin-top: 48px; color: var(--muted); font-size: .9rem; }
-  footer a { color: inherit; }
+  html { background: var(--cream); }
+  body {
+    margin: 0; background: var(--cream); color: var(--ink);
+    font: 400 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  code, pre, .mono { font-family: var(--mono); font-feature-settings: "calt", "zero"; }
+
+  /* Title strip, like the app window's: a faint wash of the brand colour on the left. */
+  .strip {
+    height: 40px; display: flex; align-items: flex-end; gap: 24px; padding: 0 20px 8px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(to right, color-mix(in srgb, var(--brand) 6%, transparent), transparent 50%);
+  }
+  .strip .crumbs { font: 12px var(--mono); color: var(--muted); }
+  .strip .crumbs b { color: var(--ink); font-weight: 400; }
+  .strip .crumbs i { color: color-mix(in srgb, var(--ink) 30%, transparent); font-style: normal; }
+  .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+
+  main { max-width: 760px; margin: 0 auto; padding: 56px 20px 48px; }
+  h1 { font-size: 40px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 6px; line-height: 1.1; }
+  .tag { color: var(--muted); font-size: 17px; margin: 0 0 28px; max-width: 560px; }
+
+  /* Primary: charcoal with the signature inset highlight. */
+  .btn-primary {
+    display: inline-flex; flex-direction: column; align-items: flex-start; gap: 2px;
+    background: var(--ink); color: var(--paper); text-decoration: none; border-radius: 6px;
+    padding: 10px 16px; font-size: 15px; font-weight: 600;
+    box-shadow: rgb(255 255 255 / 0.2) 0 0.5px 0 0 inset, rgb(0 0 0 / 0.2) 0 0 0 0.5px inset, rgb(0 0 0 / 0.05) 0 1px 2px 0;
+    transition: opacity 120ms, box-shadow 120ms;
+  }
+  .btn-primary:active { opacity: 0.8; }
+  .btn-primary:focus-visible { outline: none; box-shadow: var(--shadow-soft); }
+  .btn-primary small { font-weight: 400; font-size: 12px; opacity: 0.75; }
+  .btn {
+    display: inline-block; text-decoration: none; border-radius: 6px; padding: 4px 12px; font-size: 14px;
+    border: 1px solid color-mix(in srgb, var(--ink) 40%, transparent); transition: background-color 120ms;
+  }
+  .btn:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+
+  .hero { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .version { color: var(--muted); font-size: 12px; margin: 10px 0 0; }
+  .version .mono { color: var(--ink); }
+  .version .dot { display: inline-block; width: 8px; height: 8px; border-radius: 999px; background: var(--ok); vertical-align: -1px; margin-right: 6px; }
+
+  h2 { font-size: 11px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 44px 0 10px; }
+
+  /* Downloads: one bordered card, rows divided by hairlines, an accent bar on the visitor's platform. */
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .dl { list-style: none; margin: 0; padding: 0; }
+  .dl li { display: flex; align-items: center; gap: 12px; padding: 0 14px 0 0; border-bottom: 1px solid var(--line); border-left: 3px solid transparent; transition: background-color 120ms; }
+  .dl li:last-child { border-bottom: 0; }
+  .dl li:hover { background: color-mix(in srgb, var(--ink) 3%, transparent); }
+  .dl li.here { border-left-color: var(--brand); background: color-mix(in srgb, var(--ink) 5%, transparent); }
+  .dl a { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 12px; padding: 11px 12px; text-decoration: none; color: var(--ink); }
+  .dl a .name { font-weight: 600; white-space: nowrap; }
+  .dl a .file { font: 12px var(--mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dl .req { color: var(--muted); font-size: 12px; text-align: right; white-space: nowrap; }
+  .dl .size { font: 12px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; min-width: 4.5em; text-align: right; }
+  .chip { display: inline-block; border-radius: 999px; padding: 1px 8px; font-size: 11px; color: var(--muted); border: 1px solid var(--line); }
+
+  .note { color: var(--muted); font-size: 13px; margin: 10px 0 0; }
+  .note code { font-size: 12px; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; }
+
+  /* First-launch notes as a small table of platforms, in the tile style. */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; }
+  .tile { background: var(--cream); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; font-size: 13px; }
+  .tile .eyebrow { font-size: 10px; margin-bottom: 4px; }
+  .tile p { margin: 0; color: var(--muted); }
+  .tile p b { color: var(--ink); font-weight: 600; }
+  pre { margin: 8px 0 0; background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+  pre code .k { color: var(--syn-key); } pre code .s { color: var(--syn-str); } pre code .n { color: var(--syn-num); }
+
+  footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; display: flex; gap: 12px; flex-wrap: wrap; }
+  footer a { text-decoration: none; }
+  footer a:hover { color: var(--ink); }
+  footer .sep { color: color-mix(in srgb, var(--ink) 30%, transparent); }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; } }
 </style>
 </head>
 <body>
+<div class="strip">
+  <span class="eyebrow">mqttc</span>
+  <span class="crumbs" aria-hidden="true">download<i> / </i><b id="crumb">latest</b></span>
+</div>
+
 <main>
   <h1>mqttc</h1>
   <p class="tag">A small, fast, open source desktop MQTT client. Connect to a broker, watch topics stream in, inspect payloads, and publish, all from one window.</p>
 
-  <a class="primary" id="primary" href="https://github.com/flyzard/mqtt-client/releases/latest">Download<small id="primary-sub">See all releases</small></a>
+  <div class="hero">
+    <a class="btn-primary" id="primary" href="https://github.com/flyzard/mqtt-client/releases/latest">
+      <span id="primary-label">Download</span>
+      <small id="primary-sub">Pick a platform below</small>
+    </a>
+    <a class="btn" href="https://github.com/flyzard/mqtt-client/releases/latest">All releases</a>
+  </div>
   <p class="version" id="version">Free and open source under the MIT License.</p>
 
-  <h2>All downloads</h2>
-  <ul class="dl">
-    <li><a data-os="mac" href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-macos-universal.dmg">macOS</a><span>Universal DMG, Apple Silicon and Intel, macOS 13+</span></li>
-    <li><a data-os="win" href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-windows-amd64-installer.exe">Windows</a><span>Installer, 64-bit</span></li>
-    <li><a data-os="linux" href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-linux-amd64.deb">Linux .deb</a><span>Ubuntu 24.04+, Debian 13+</span></li>
-    <li><a href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-linux-amd64.rpm">Linux .rpm</a><span>Fedora 40+</span></li>
-    <li><a href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-linux-amd64.AppImage">Linux AppImage</a><span>Needs GTK 4 and WebKitGTK 6.0 installed</span></li>
-  </ul>
-  <p class="note">Checksums for every file are in <code>SHA256SUMS.txt</code> on the <a href="https://github.com/flyzard/mqtt-client/releases/latest">release page</a>.</p>
+  <h2>Downloads</h2>
+  <div class="card">
+    <ul class="dl">
+      <li data-os="mac"><a href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-macos-universal.dmg"><span class="name">macOS</span><span class="file">mqttc-macos-universal.dmg</span></a><span class="req">Universal · macOS 13+</span><span class="size" data-asset="mqttc-macos-universal.dmg"></span></li>
+      <li data-os="win"><a href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-windows-amd64-installer.exe"><span class="name">Windows</span><span class="file">mqttc-windows-amd64-installer.exe</span></a><span class="req">Installer · 64-bit</span><span class="size" data-asset="mqttc-windows-amd64-installer.exe"></span></li>
+      <li data-os="linux"><a href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-linux-amd64.deb"><span class="name">Linux</span><span class="file">mqttc-linux-amd64.deb</span></a><span class="req">Ubuntu 24.04+ · Debian 13+</span><span class="size" data-asset="mqttc-linux-amd64.deb"></span></li>
+      <li><a href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-linux-amd64.rpm"><span class="name">Linux</span><span class="file">mqttc-linux-amd64.rpm</span></a><span class="req">Fedora 40+</span><span class="size" data-asset="mqttc-linux-amd64.rpm"></span></li>
+      <li><a href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-linux-amd64.AppImage"><span class="name">Linux</span><span class="file">mqttc-linux-amd64.AppImage</span></a><span class="req">Needs GTK 4 and WebKitGTK 6.0</span><span class="size" data-asset="mqttc-linux-amd64.AppImage"></span></li>
+    </ul>
+  </div>
+  <p class="note">Every release ships <code>SHA256SUMS.txt</code> to check downloads against. Builds are not code signed yet, so each OS warns once.</p>
 
   <h2>First launch</h2>
-  <p class="note">The builds are not code signed yet, so your OS warns once.</p>
-  <p><strong>macOS</strong> says the app is damaged. Drag it to Applications, then run this once in Terminal:</p>
-  <pre><code>xattr -cr /Applications/mqttc.app</code></pre>
-  <p><strong>Windows</strong> shows a SmartScreen dialog. Click <em>More info</em>, then <em>Run anyway</em>.</p>
+  <div class="tiles">
+    <div class="tile">
+      <div class="eyebrow">macOS</div>
+      <p><b>“mqttc is damaged”</b> Drag it to Applications, then run once in Terminal:</p>
+      <pre><code>xattr -cr /Applications/mqttc.app</code></pre>
+    </div>
+    <div class="tile">
+      <div class="eyebrow">Windows</div>
+      <p><b>SmartScreen</b> Click <i>More info</i>, then <i>Run anyway</i>.</p>
+    </div>
+    <div class="tile">
+      <div class="eyebrow">Linux</div>
+      <p><b>No gate.</b> The AppImage needs <code class="mono">chmod +x</code> first.</p>
+    </div>
+  </div>
+
+  <h2>Connecting</h2>
+  <div class="tiles">
+    <div class="tile">
+      <div class="eyebrow">Paste a broker URL</div>
+      <p>A bare host defaults to <span class="mono">tcp</span> on 1883. Credentials and TLS go in the URL:</p>
+      <pre><code><span class="k">mqtts://</span><span class="s">user:pass</span>@<span class="s">broker.example</span>:<span class="n">8883</span></code></pre>
+    </div>
+    <div class="tile">
+      <div class="eyebrow">Then</div>
+      <p>Topics fill in as messages arrive. <span class="chip">/</span> filters them, <span class="chip">↑↓</span> walk them, <span class="chip">⌘↵</span> publishes. Passwords live in the OS keychain.</p>
+    </div>
+  </div>
 
   <footer>
-    <a href="https://github.com/flyzard/mqtt-client">Source on GitHub</a> ·
-    <a href="https://github.com/flyzard/mqtt-client/issues">Report an issue</a> ·
-    <a href="https://github.com/flyzard/mqtt-client/blob/main/LICENSE">MIT License</a>
+    <a href="https://github.com/flyzard/mqtt-client">Source on GitHub</a><span class="sep">·</span>
+    <a href="https://github.com/flyzard/mqtt-client/issues">Report an issue</a><span class="sep">·</span>
+    <a href="https://github.com/flyzard/mqtt-client/blob/main/LICENSE">MIT License</a><span class="sep">·</span>
+    <span>Go · Wails · Svelte</span>
   </footer>
 </main>
+
 <script>
   (function () {
     var ua = navigator.userAgent, plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "";
     var os = /Mac/i.test(plat) ? "mac" : /Win/i.test(plat) ? "win" : /Linux/i.test(plat) && !/Android/i.test(ua) ? "linux" : null;
-    var label = { mac: "Download for macOS", win: "Download for Windows", linux: "Download for Linux (.deb)" };
+    var label = { mac: "Download for macOS", win: "Download for Windows", linux: "Download for Linux" };
     if (os) {
-      var link = document.querySelector('ul.dl a[data-os="' + os + '"]');
+      var row = document.querySelector('li[data-os="' + os + '"]');
+      row.classList.add("here");
       var btn = document.getElementById("primary");
-      btn.href = link.href;
-      btn.firstChild.textContent = label[os];
-      document.getElementById("primary-sub").textContent = "Other platforms below";
+      btn.href = row.querySelector("a").href;
+      document.getElementById("primary-label").textContent = label[os];
+      document.getElementById("primary-sub").textContent = row.querySelector(".file").textContent;
     }
+    function size(n) { return n < 1048576 ? Math.round(n / 1024) + " KB" : (n / 1048576).toFixed(1) + " MB"; }
     fetch("https://api.github.com/repos/flyzard/mqtt-client/releases/latest")
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (rel) {
         if (!rel) return;
         var d = new Date(rel.published_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-        document.getElementById("version").textContent = "Latest release " + rel.tag_name + ", " + d + ". Free and open source under the MIT License.";
+        document.getElementById("version").innerHTML =
+          '<span class="dot"></span>Latest release <span class="mono">' + rel.tag_name + "</span>, " + d + ". Free and open source under the MIT License.";
+        document.getElementById("crumb").textContent = rel.tag_name;
+        (rel.assets || []).forEach(function (a) {
+          var el = document.querySelector('[data-asset="' + a.name + '"]');
+          if (el) el.textContent = size(a.size);
+        });
       })
       .catch(function () {});
   })();
