@@ -235,17 +235,15 @@ func TestConcurrentPushAndFlush(t *testing.T) {
 	b, sink := newTestBatcher(t, 100)
 	b.Watch("t", 0)
 	var wg sync.WaitGroup
-	for g := 0; g < 4; g++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for i := 0; i < 250; i++ {
+	for range 4 {
+		wg.Go(func() {
+			for i := range 250 {
 				b.Push(msg("t", i))
 				if i%50 == 0 {
 					b.Flush()
 				}
 			}
-		}()
+		})
 	}
 	wg.Wait()
 	b.Flush()

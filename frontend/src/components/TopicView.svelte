@@ -4,8 +4,8 @@
   // is selected.
   import { Tween } from "svelte/motion";
   import { app } from "../lib/state.svelte";
-  import { clock } from "../lib/clock.svelte";
-  import { fmtBytes, fmtCount, fmtInterval, fmtRate, fmtTime, rateOf } from "../lib/format";
+  import { atTick } from "../lib/clock.svelte";
+  import { bytesParts, fmtBytes, fmtCount, fmtNum, fmtTime, intervalParts, rateOf, rateParts, type Quantity } from "../lib/format";
   import { numericFields, series } from "../lib/series";
   import Payload from "./Payload.svelte";
   import Sparkline from "./Sparkline.svelte";
@@ -14,18 +14,12 @@
 
   const stats = $derived(app.selectedProfile ? app.topics.get(app.selectedProfile)?.get(topic) : undefined);
   const latest = $derived(app.messages[0]);
-  const rate = $derived(stats ? rateOf(stats, clock.now) : 0);
-  // Eased so the tile ticks towards the new rate instead of jumping.
-  const shownRate = new Tween(0, { duration: 400 });
-  $effect(() => {
-    shownRate.target = rate;
-  });
-
-  /** "0.48/s" -> ["0.48", "/s"] so the unit can be set small and dim. */
-  function split(s: string): [string, string] {
-    const m = /^([\d.,]+)(.*)$/.exec(s);
-    return m ? [m[1], m[2]] : [s, ""];
-  }
+  // Sampled once per clock tick rather than per batch, and eased so the tile
+  // ticks towards the new rate instead of jumping.
+  const rate = $derived(atTick((now) => (stats ? rateOf(stats, now) : 0)));
+  const shownRate = Tween.of(() => rate, { duration: 400 });
+  // Rows that arrive after the view opened animate in; history does not.
+  const openedAt = Date.now();
 
   // ---- sparkline ----------------------------------------------------------------
   const fields = $derived(numericFields(app.messages));
@@ -53,10 +47,9 @@
   }
 </script>
 
-{#snippet tile(label: string, value: string)}
-  {@const [num, unit] = split(value)}
-  <div class="tile">
-    <div class="text-[10px] uppercase tracking-wider text-muted">{label}</div>
+{#snippet tile(label: string, [num, unit]: Quantity)}
+  <div class="card bg-cream px-3 py-2 min-w-0">
+    <div class="eyebrow text-[10px]">{label}</div>
     <div class="text-xl font-semibold tracking-tight text-ink tabular-nums leading-tight truncate">
       {num}<span class="text-xs font-normal tracking-normal text-muted ml-0.5">{unit}</span>
     </div>
@@ -65,10 +58,10 @@
 
 <div class="h-full min-h-0 flex flex-col">
   <div class="grid grid-cols-4 gap-2 px-4 pt-3">
-    {@render tile("msgs", fmtCount(stats?.count ?? 0))}
-    {@render tile("rate", fmtRate(shownRate.current))}
-    {@render tile("interval", fmtInterval(stats?.avgInterval ?? 0))}
-    {@render tile("size", latest ? fmtBytes(latest.bytes.length) : "—")}
+    {@render tile("msgs", [fmtCount(stats?.count ?? 0)])}
+    {@render tile("rate", rateParts(shownRate.current))}
+    {@render tile("interval", intervalParts(stats?.avgInterval ?? 0))}
+    {@render tile("size", bytesParts(latest?.bytes.length))}
   </div>
 
   {#if field !== null}
@@ -76,7 +69,7 @@
       <div class="flex items-center text-[11px] text-muted mb-1">
         <span>field</span>
         {#if fields.length > 1}
-          <select class="ml-1.5 bg-transparent text-ink font-mono outline-none cursor-pointer" value={field}
+          <select class="ml-1.5 font-mono" value={field}
                   onchange={(e) => (chosen = e.currentTarget.value)}>
             {#each fields as f (f)}<option value={f}>{f || "value"}</option>{/each}
           </select>
@@ -85,7 +78,7 @@
         {/if}
         <span class="flex-1"></span>
         <span>last {values.length}</span>
-        <span class="ml-2 font-mono brand tabular-nums">{values.at(-1)?.v}</span>
+        <span class="ml-2 font-mono brand tabular-nums">{fmtNum(values[values.length - 1].v)}</span>
       </div>
       <Sparkline points={values} />
     </div>
@@ -106,7 +99,7 @@
     <div bind:this={list} onscroll={onScroll} class="h-full overflow-y-auto">
       {#each app.messages as m (m.id)}
         {@const open = expanded === m.id}
-        <div class="rise border-b border-line {open ? 'sel' : ''}">
+        <div class="border-b border-line" class:sel={open} class:rise={m.receivedAt > openedAt}>
           <button class="w-full text-left flex items-center gap-3 px-4 h-8 hover:bg-ink/3" onclick={() => (expanded = open ? null : m.id)}>
             <span class="font-mono text-xs text-muted tabular-nums shrink-0">{fmtTime(m.receivedAt)}</span>
             <span class="flex-1 min-w-0 truncate font-mono text-xs text-ink">
@@ -133,7 +126,7 @@
         </div>
       {/each}
       {#if !app.messages.length}
-        <div class="px-4 py-8 text-center text-xs text-muted">No messages yet</div>
+        <div class="empty text-center">No messages yet</div>
       {/if}
     </div>
   </div>

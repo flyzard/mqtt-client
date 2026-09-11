@@ -89,9 +89,11 @@
   {@const selected = app.selectedTopic === c.path}
   {@const stale = s ? isStale(s, clock.now) : false}
   <div
-    class="flex items-center gap-1.5 h-7 pr-2 cursor-pointer transition-colors duration-300
-           accent {selected ? 'accent-on sel' : app.flashing.has(c.path) ? 'accent-off flash' : 'accent-off hover:bg-ink/3'}
-           {stale && !selected ? 'opacity-50' : ''}"
+    class={[
+      "flex items-center gap-1.5 h-7 pr-2 cursor-pointer transition-colors duration-300 accent",
+      selected ? "accent-on sel" : ["accent-off", app.flashing.has(c.path) ? "flash" : "hover:bg-ink/3"],
+      stale && !selected && "opacity-50",
+    ]}
     style="padding-left: {5 + depth * 14}px"
     role="button"
     tabindex="0"
@@ -134,26 +136,26 @@
       spellcheck="false"
       onkeydown={(e) => { if (e.key === "Escape") { filter = ""; e.currentTarget.blur(); } }}
     />
-    <button class="chip {byActivity ? 'chip-on' : ''}" title="Sort by message count" onclick={() => (byActivity = !byActivity)}>activity</button>
+    <button class="chip active:opacity-80 {byActivity ? 'chip-on' : 'hover:text-ink'}" title="Sort by message count" onclick={() => (byActivity = !byActivity)}>activity</button>
   </div>
 
   <div class="flex-1 min-h-0 overflow-y-auto py-1">
     {#if !profileId}
-      <div class="px-4 py-8 text-xs text-muted leading-relaxed">
-        <div class="text-ink font-semibold text-sm mb-1">No connection selected</div>
+      <div class="empty">
+        <div class="empty-title">No connection selected</div>
         Pick one on the left. Double-click connects.
       </div>
     {:else if canConnect(connState)}
-      <div class="px-4 py-8 text-xs text-muted flex flex-col gap-3 items-start">
-        <div class="text-ink font-semibold text-sm">Not connected</div>
+      <div class="empty flex flex-col gap-2 items-start">
+        <div class="empty-title">Not connected</div>
         <button class="btn-primary text-xs" onclick={() => app.connect(profileId)}>Connect</button>
       </div>
     {:else if tree.children.length === 0}
-      <div class="px-4 py-8 text-xs text-muted leading-relaxed">
+      <div class="empty">
         {#if filter}
           Nothing matches the filter.
         {:else}
-          <div class="text-ink font-semibold text-sm mb-1 flex items-center gap-2">
+          <div class="empty-title flex items-center gap-2">
             <span class="inline-block size-2 rounded-full bg-ok animate-pulse"></span> Listening
           </div>
           Topics appear here as messages arrive. Press <kbd>/</kbd> to filter them.

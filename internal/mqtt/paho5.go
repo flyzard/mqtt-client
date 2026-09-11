@@ -139,15 +139,13 @@ func (p *paho5) Connect(ctx context.Context) error {
 			p.resubscribe(runCtx, gen, cm)
 		},
 		OnConnectError: func(err error) { p.setState(gen, StateReconnecting, err.Error()) },
-		ClientConfig: paho.ClientConfig{
-			ClientID: p.opts.ClientID,
-			OnPublishReceived: []func(paho.PublishReceived) (bool, error){
-				func(pr paho.PublishReceived) (bool, error) { p.onPublish(gen, pr.Packet); return true, nil },
-			},
-			OnClientError: func(err error) { p.setState(gen, StateReconnecting, err.Error()) },
-			OnServerDisconnect: func(d *paho.Disconnect) {
-				p.setState(gen, StateReconnecting, fmt.Sprintf("server disconnect: reason %d", d.ReasonCode))
-			},
+		ClientID:       p.opts.ClientID,
+		OnPublishReceived: []func(paho.PublishReceived) (bool, error){
+			func(pr paho.PublishReceived) (bool, error) { p.onPublish(gen, pr.Packet); return true, nil },
+		},
+		OnClientError: func(err error) { p.setState(gen, StateReconnecting, err.Error()) },
+		OnServerDisconnect: func(d *paho.Disconnect) {
+			p.setState(gen, StateReconnecting, fmt.Sprintf("server disconnect: reason %d", d.ReasonCode))
 		},
 	}
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ago, fmtBytes, fmtInterval, fmtRate, isStale, rateOf } from "./format";
+import { ago, bytesParts, fmtBytes, fmtRate, intervalParts, isStale, rateOf } from "./format";
 import { highlight, tokenize } from "./highlight";
 import { numericFields, SCALAR, series } from "./series";
 import { hostOf, parseConnection } from "./broker";
@@ -44,12 +44,13 @@ describe("format", () => {
     expect(fmtRate(0.5)).toBe("0.50/s");
     expect(fmtRate(2.55)).toBe("2.5/s");
     expect(fmtRate(142.4)).toBe("142/s");
-    expect(fmtInterval(0)).toBe("—");
-    expect(fmtInterval(450)).toBe("450ms");
-    expect(fmtInterval(2000)).toBe("2.0s");
-    expect(fmtInterval(90_000)).toBe("1.5m");
+    expect(intervalParts(0)).toEqual(["—"]);
+    expect(intervalParts(450)).toEqual(["450", "ms"]);
+    expect(intervalParts(2000)).toEqual(["2.0", "s"]);
+    expect(intervalParts(90_000)).toEqual(["1.5", "m"]);
     expect(fmtBytes(11)).toBe("11 B");
     expect(fmtBytes(1536)).toBe("1.5 KB");
+    expect(bytesParts(undefined)).toEqual(["—"]);
   });
 });
 

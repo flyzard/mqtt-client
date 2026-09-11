@@ -20,10 +20,19 @@ export function isStale(s: Pick<TopicStats, "avgInterval" | "lastSeen">, now: nu
   return now - s.lastSeen > Math.max(10_000, s.avgInterval * 5);
 }
 
+/** A number and its unit, kept apart so the UI can style them differently. */
+export type Quantity = [num: string, unit?: string];
+const NONE: Quantity = ["—"];
+
+/** A size in bytes: "11 B", "1.5 KB", "—" when there is none. */
+export function bytesParts(n: number | undefined): Quantity {
+  if (n === undefined) return NONE;
+  if (n < 1024) return [String(n), "B"];
+  if (n < 1024 * 1024) return [(n / 1024).toFixed(1), "KB"];
+  return [(n / 1024 / 1024).toFixed(1), "MB"];
+}
 export function fmtBytes(n: number): string {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
-  return `${(n / 1024 / 1024).toFixed(1)} MB`;
+  return bytesParts(n).join(" ");
 }
 
 const COUNT = new Intl.NumberFormat();
@@ -38,20 +47,28 @@ export function rateOf(s: Pick<TopicStats, "avgInterval" | "lastSeen">, now: num
 }
 
 /** Messages per second: "142/s", "2.5/s", "0.05/s", "—" for zero. */
+export function rateParts(perSec: number): Quantity {
+  if (!(perSec > 0)) return NONE;
+  if (perSec >= 10) return [String(Math.round(perSec)), "/s"];
+  if (perSec >= 1) return [perSec.toFixed(1), "/s"];
+  return [perSec.toFixed(2), "/s"];
+}
 export function fmtRate(perSec: number): string {
-  if (!(perSec > 0)) return "—";
-  if (perSec >= 10) return `${Math.round(perSec)}/s`;
-  if (perSec >= 1) return `${perSec.toFixed(1)}/s`;
-  return `${perSec.toFixed(2)}/s`;
+  return rateParts(perSec).join("");
 }
 
 /** An interval in ms: "450ms", "2.0s", "1.5m", "—" for unknown. */
-export function fmtInterval(ms: number): string {
-  if (!(ms > 0)) return "—";
-  if (ms < 1000) return `${Math.round(ms)}ms`;
-  if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`;
-  if (ms < 3_600_000) return `${(ms / 60_000).toFixed(1)}m`;
-  return `${(ms / 3_600_000).toFixed(1)}h`;
+export function intervalParts(ms: number): Quantity {
+  if (!(ms > 0)) return NONE;
+  if (ms < 1000) return [String(Math.round(ms)), "ms"];
+  if (ms < 60_000) return [(ms / 1000).toFixed(1), "s"];
+  if (ms < 3_600_000) return [(ms / 60_000).toFixed(1), "m"];
+  return [(ms / 3_600_000).toFixed(1), "h"];
+}
+
+/** A chart value: integers as-is, otherwise four significant digits. */
+export function fmtNum(v: number): string {
+  return Number.isInteger(v) ? String(v) : v.toPrecision(4).replace(/\.?0+$/, "");
 }
 
 const TIME = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });

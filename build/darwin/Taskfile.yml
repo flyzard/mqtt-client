@@ -6,6 +6,10 @@ includes:
 vars:
   # Docker image for cross-compilation (used when building on non-macOS)
   CROSS_IMAGE: wails-cross
+  # Oldest macOS the app runs on. Go 1.27 dropped anything below 13. The
+  # checked-in Info*.plist files are regenerated from Wails templates, so the
+  # bundle tasks stamp this value in rather than trusting the file.
+  MACOS_MIN: "13.0"
 
 tasks:
   build:
@@ -50,9 +54,9 @@ tasks:
       GOOS: darwin
       CGO_ENABLED: 1
       GOARCH: '{{.ARCH | default ARCH}}'
-      CGO_CFLAGS: "-mmacosx-version-min=12.0"
-      CGO_LDFLAGS: "-mmacosx-version-min=12.0"
-      MACOSX_DEPLOYMENT_TARGET: "12.0"
+      CGO_CFLAGS: "-mmacosx-version-min={{.MACOS_MIN}}"
+      CGO_LDFLAGS: "-mmacosx-version-min={{.MACOS_MIN}}"
+      MACOSX_DEPLOYMENT_TARGET: "{{.MACOS_MIN}}"
 
   build:docker:
     summary: Cross-compiles for macOS using Docker (for Linux/Windows hosts)
@@ -167,6 +171,7 @@ tasks:
         fi
       - cp "{{.BIN_DIR}}/{{.APP_NAME}}" "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS"
       - cp build/darwin/Info.plist "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents"
+      - '{{if eq OS "darwin"}}plutil -replace LSMinimumSystemVersion -string "{{.MACOS_MIN}}.0" "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Info.plist"{{else}}true{{end}}'
       - task: '{{if eq OS "darwin"}}codesign:adhoc{{else}}codesign:skip{{end}}'
 
   codesign:adhoc:
@@ -192,6 +197,7 @@ tasks:
         fi
       - cp "{{.BIN_DIR}}/{{.APP_NAME}}" "{{.BIN_DIR}}/{{.APP_NAME}}.dev.app/Contents/MacOS"
       - cp "build/darwin/Info.dev.plist" "{{.BIN_DIR}}/{{.APP_NAME}}.dev.app/Contents/Info.plist"
+      - plutil -replace LSMinimumSystemVersion -string "{{.MACOS_MIN}}.0" "{{.BIN_DIR}}/{{.APP_NAME}}.dev.app/Contents/Info.plist"
       - codesign --force --deep --sign - "{{.BIN_DIR}}/{{.APP_NAME}}.dev.app"
       - '"{{.BIN_DIR}}/{{.APP_NAME}}.dev.app/Contents/MacOS/{{.APP_NAME}}"'
 

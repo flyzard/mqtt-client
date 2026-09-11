@@ -5,11 +5,12 @@
   // anything that must keep its shape (dot, crosshair, labels) is HTML placed
   // by percentage.
   import type { Point } from "../lib/series";
-  import { fmtTime } from "../lib/format";
+  import { fmtNum, fmtTime } from "../lib/format";
 
-  let { points, height = 72 }: { points: Point[]; height?: number } = $props();
+  let { points }: { points: Point[] } = $props();
 
   const W = 100;
+  const H = 72;
   const PAD = 4;
   const uid = $props.id();
 
@@ -27,13 +28,13 @@
     const parts: string[] = [];
     points.forEach(({ v }, i) => {
       const x = (i / (points.length - 1)) * W;
-      const y = PAD + (1 - (v - min) / span) * (height - PAD * 2);
+      const y = PAD + (1 - (v - min) / span) * (H - PAD * 2);
       xs.push(x);
       ys.push(y);
       parts.push(`${i ? "L" : "M"}${x.toFixed(2)},${y.toFixed(2)}`);
     });
     const line = parts.join(" ");
-    return { min, max, xs, ys, line, area: `${line} L${W},${height} L0,${height} Z` };
+    return { min, max, xs, ys, line, area: `${line} L${W},${H} L0,${H} Z` };
   });
 
   // Index under the pointer, or null when not hovering.
@@ -43,16 +44,13 @@
     const f = (e.clientX - r.getBoundingClientRect().left) / r.clientWidth;
     hover = Math.max(0, Math.min(points.length - 1, Math.round(f * (points.length - 1))));
   }
-
-  const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toPrecision(4).replace(/\.?0+$/, ""));
 </script>
 
 {#if geo}
   {@const last = points.length - 1}
-  {@const at = hover ?? last}
-  <div class="relative brand font-mono cursor-crosshair" style="height:{height}px" role="img" aria-label="chart"
+  <div class="relative brand font-mono cursor-crosshair" style="height:{H}px" role="img" aria-label="chart"
        onpointermove={move} onpointerleave={() => (hover = null)}>
-    <svg viewBox="0 0 {W} {height}" preserveAspectRatio="none" class="absolute inset-0 block size-full" aria-hidden="true">
+    <svg viewBox="0 0 {W} {H}" preserveAspectRatio="none" class="absolute inset-0 block size-full" aria-hidden="true">
       <defs>
         <linearGradient id="g{uid}" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stop-color="currentColor" stop-opacity="0.16" />
@@ -67,19 +65,19 @@
     <span class="absolute size-2 -m-1 rounded-full bg-current ring-2 ring-cream" style="left:{geo.xs[last]}%; top:{geo.ys[last]}px"></span>
 
     <!-- Range labels -->
-    <span class="absolute left-0 top-0 text-[10px] leading-none text-muted tabular-nums">{fmt(geo.max)}</span>
-    <span class="absolute left-0 bottom-0 text-[10px] leading-none text-muted tabular-nums">{fmt(geo.min)}</span>
+    <span class="absolute left-0 top-0 text-[10px] leading-none text-muted tabular-nums">{fmtNum(geo.max)}</span>
+    <span class="absolute left-0 bottom-0 text-[10px] leading-none text-muted tabular-nums">{fmtNum(geo.min)}</span>
 
     {#if hover !== null}
-      <div class="absolute top-0 bottom-0 w-px bg-current opacity-40" style="left:{geo.xs[at]}%"></div>
-      <span class="absolute size-2 -m-1 rounded-full border border-current bg-cream" style="left:{geo.xs[at]}%; top:{geo.ys[at]}px"></span>
-      <div class="card absolute top-0 text-[10px] leading-none whitespace-nowrap px-1.5 py-1 {geo.xs[at] > 60 ? '-translate-x-full' : ''}"
-           style="left:{geo.xs[at]}%; margin-left:{geo.xs[at] > 60 ? -6 : 6}px">
-        <span class="text-ink tabular-nums">{fmt(points[at].v)}</span>
-        <span class="text-muted ml-1.5">{fmtTime(points[at].t)}</span>
+      <div class="absolute top-0 bottom-0 w-px bg-current opacity-40" style="left:{geo.xs[hover]}%"></div>
+      <span class="absolute size-2 -m-1 rounded-full border border-current bg-cream" style="left:{geo.xs[hover]}%; top:{geo.ys[hover]}px"></span>
+      <div class="card absolute top-0 text-[10px] leading-none whitespace-nowrap px-1.5 py-1 {geo.xs[hover] > 60 ? '-translate-x-full' : ''}"
+           style="left:{geo.xs[hover]}%; margin-left:{geo.xs[hover] > 60 ? -6 : 6}px">
+        <span class="text-ink tabular-nums">{fmtNum(points[hover].v)}</span>
+        <span class="text-muted ml-1.5">{fmtTime(points[hover].t)}</span>
       </div>
     {/if}
   </div>
 {:else}
-  <div class="grid place-items-center text-[11px] text-muted/70" style="height:{height}px">waiting for a second value</div>
+  <div class="grid place-items-center text-[11px] text-muted/70" style="height:{H}px">waiting for a second value</div>
 {/if}

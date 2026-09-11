@@ -28,6 +28,9 @@
   --color-syn-kw: #7a4f8e;
 
   --shadow-soft: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+
+  /* The three panes; the title strip uses the same template so its labels line up. */
+  --grid-template-columns-panes: 260px 340px minmax(0, 1fr);
 }
 
 @layer base {
@@ -65,6 +68,9 @@
   input[type="checkbox"] {
     accent-color: var(--color-ink);
   }
+  select {
+    @apply bg-transparent outline-none text-ink cursor-pointer;
+  }
   select option {
     @apply bg-paper text-ink;
   }
@@ -83,40 +89,31 @@
   /* Inputs: paper on cream, a warm hairline, and a soft diffused shadow
      instead of a sharp outline on focus. */
   .inp {
-    @apply bg-paper text-ink rounded-md px-2.5 py-1.5 border border-line outline-none placeholder:text-muted/70;
+    @apply bg-paper text-ink rounded-md px-2.5 py-1.5 border border-line outline-none placeholder:text-muted/70
+           focus:border-ink/40 focus:shadow-soft;
     transition: box-shadow 120ms, border-color 120ms;
-  }
-  .inp:focus {
-    border-color: rgb(28 28 28 / 0.4);
-    box-shadow: var(--shadow-soft);
   }
   /* Primary: charcoal with the signature inset highlight. */
   .btn-primary {
-    @apply bg-ink text-paper rounded-md px-3.5 py-1.5 text-sm outline-none disabled:opacity-40;
+    @apply bg-ink text-paper rounded-md px-3.5 py-1.5 text-sm outline-none disabled:opacity-40 enabled:active:opacity-80
+           focus-visible:shadow-soft;
     box-shadow: rgb(255 255 255 / 0.2) 0px 0.5px 0px 0px inset, rgb(0 0 0 / 0.2) 0px 0px 0px 0.5px inset, rgb(0 0 0 / 0.05) 0px 1px 2px 0px;
     transition: opacity 120ms, box-shadow 120ms;
   }
-  .btn-primary:not(:disabled):active {
-    opacity: 0.8;
-  }
-  .btn-primary:focus-visible {
-    box-shadow: var(--shadow-soft);
-  }
   /* Ghost: transparent with an interactive border. */
   .btn {
-    @apply bg-transparent text-ink rounded-md px-3 py-1 text-sm outline-none border border-ink/40 hover:bg-ink/4 active:opacity-80;
+    @apply bg-transparent text-ink rounded-md px-3 py-1 text-sm outline-none border border-ink/40 hover:bg-ink/4 active:opacity-80
+           focus-visible:shadow-soft;
     transition: box-shadow 120ms, background-color 120ms;
-  }
-  .btn:focus-visible {
-    box-shadow: var(--shadow-soft);
   }
   /* Flat: toolbar buttons on the surface itself. */
   .btn-flat {
     @apply rounded-md px-2 py-0.5 text-muted hover:text-ink hover:bg-ink/4 active:opacity-80;
   }
-  /* Pills are reserved for toggles and tags. */
+  /* Pills are reserved for toggles and tags. Static by default: a toggle adds
+     its own hover for the off state, since .chip-on already inverts colours. */
   .chip {
-    @apply rounded-full px-2 py-0.5 text-[11px] text-muted border border-line hover:text-ink active:opacity-80;
+    @apply rounded-full px-2 py-0.5 text-[11px] text-muted border border-line;
   }
   .chip-on {
     @apply bg-ink text-paper border-ink;
@@ -137,7 +134,7 @@
     @apply bg-ink/5;
   }
   .flash {
-    background: color-mix(in oklab, var(--color-warn) 16%, transparent);
+    @apply bg-warn/16;
   }
   .brand {
     color: var(--brand);
@@ -146,22 +143,29 @@
   .card {
     @apply bg-paper border border-line rounded-lg;
   }
-  .tile {
-    @apply bg-cream border border-line rounded-lg px-3 py-2 min-w-0;
-  }
   .badge {
     @apply inline-grid place-items-center h-4 px-1 rounded text-[9px] font-semibold tracking-wide shrink-0 text-ink border border-ink/40;
+  }
+  /* Section label and the empty-state copy shared by the panes. */
+  .eyebrow {
+    @apply text-[11px] uppercase tracking-wider text-muted;
+  }
+  .empty {
+    @apply px-4 py-8 text-xs text-muted leading-relaxed;
+  }
+  .empty-title {
+    @apply text-ink font-semibold text-sm mb-1;
   }
   /* New message rows slide up into place. */
   .rise {
     animation: rise 180ms ease-out;
   }
-  /* Expanding ring around a connection dot, replayed on every batch by
-     re-keying the element. */
+  /* Expanding ring around a dot, in the dot's own colour, replayed on every
+     batch by re-keying the element. */
   .ping::after {
     content: "";
     @apply absolute inset-0 rounded-full;
-    background: currentColor;
+    background: inherit;
     animation: ping 600ms ease-out forwards;
   }
 }

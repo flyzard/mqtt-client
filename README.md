@@ -1,59 +1,46 @@
-# Welcome to Your New Wails3 Project!
+# mqttc
 
-Congratulations on generating your Wails3 application! This README will guide you through the next steps to get your project up and running.
+A small, fast desktop MQTT client. Connect to a broker, watch topics stream in real time, inspect payloads, and publish messages from a single window.
 
-## Getting Started
+Built with Go and [Wails v3](https://v3.wails.io/) on the backend and Svelte 5 with Tailwind on the frontend. MQTT connectivity uses the Eclipse Paho v5 client.
 
-1. Navigate to your project directory in the terminal.
+## Features
 
-2. To run your application in development mode, use the following command:
+- **Connection profiles** saved to your user config directory. Passwords go to the OS keychain and are never written to disk.
+- **Multiple sessions** open at once, one per profile.
+- **Topic tree** that fills in as messages arrive, with per-topic history.
+- **Payload inspector** with JSON rendering and syntax highlighting.
+- **Sparkline** of any numeric field in a topic's recent messages.
+- **Publish bar** for sending messages to any topic.
+- **TLS support**, with an insecure toggle for local dev brokers.
 
-   ```
-   wails3 dev
-   ```
+## Development
 
-   This will start your application and enable hot-reloading for both frontend and backend changes.
+Requires Go 1.27+, Node.js, and the [Wails v3 CLI](https://v3.wails.io/getting-started/installation/).
 
-3. To build your application for production, use:
+```
+task dev      # run with hot reload
+task build    # production build into bin/
+task package  # platform installer / bundle
+```
 
-   ```
-   wails3 build
-   ```
+Backend tests:
 
-   This will create a production-ready executable in the `build` directory.
+```
+go test ./...
+```
 
-## Exploring Wails3 Features
+Frontend checks and tests:
 
-Now that you have your project set up, it's time to explore the features that Wails3 offers:
+```
+cd frontend
+npm run check
+npm test
+```
 
-1. **Check out the examples**: The best way to learn is by example. Visit the `examples` directory in the `v3/examples` directory to see various sample applications.
+## Layout
 
-2. **Run an example**: To run any of the examples, navigate to the example's directory and use:
-
-   ```
-   go run .
-   ```
-
-   Note: Some examples may be under development during the alpha phase.
-
-3. **Explore the documentation**: Visit the [Wails3 documentation](https://v3.wails.io/) for in-depth guides and API references.
-
-4. **Join the community**: Have questions or want to share your progress? Join the [Wails Discord](https://discord.gg/JDdSxwjhGf) or visit the [Wails discussions on GitHub](https://github.com/wailsapp/wails/discussions).
-
-## Project Structure
-
-Take a moment to familiarize yourself with your project structure:
-
-- `frontend/`: Contains your frontend code (HTML, CSS, JavaScript/TypeScript)
-- `main.go`: The entry point of your Go backend
-- `app.go`: Define your application structure and methods here
-- `wails.json`: Configuration file for your Wails project
-
-## Next Steps
-
-1. Modify the frontend in the `frontend/` directory to create your desired UI.
-2. Add backend functionality in `main.go`.
-3. Use `wails3 dev` to see your changes in real-time.
-4. When ready, build your application with `wails3 build`.
-
-Happy coding with Wails3! If you encounter any issues or have questions, don't hesitate to consult the documentation or reach out to the Wails community.
+- `main.go`: app entry point and service registration
+- `internal/mqtt/`: broker sessions, message batching, and event delivery
+- `internal/services/`: profiles, secrets, and the session API exposed to the UI
+- `frontend/src/`: Svelte UI, with components under `components/` and state and helpers under `lib/`

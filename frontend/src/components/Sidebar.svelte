@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { untrack } from "svelte";
   import { app } from "../lib/state.svelte";
-  import { clock } from "../lib/clock.svelte";
+  import { atTick } from "../lib/clock.svelte";
   import { canConnect, type ConnInfo, type ConnState, type Profile } from "../lib/types";
   import { hostOf, parseConnection } from "../lib/broker";
   import { profileColor } from "../lib/color";
@@ -11,19 +10,19 @@
   let editing = $state<Profile | null>(null);
 
   /** Status dot and subline colour per connection state. */
+  const busy = { dot: "bg-warn animate-pulse", cls: "text-warn" };
   const look: Record<ConnState, { dot: string; cls: string }> = {
     connected: { dot: "bg-ok", cls: "text-muted" },
-    connecting: { dot: "bg-warn animate-pulse", cls: "text-warn" },
-    reconnecting: { dot: "bg-warn animate-pulse", cls: "text-warn" },
+    connecting: busy,
+    reconnecting: busy,
     failed: { dot: "bg-bad", cls: "text-bad" },
     disconnected: { dot: "bg-ink/25", cls: "text-muted" },
   };
 
   // Messages per second per connection from the backend's per-topic
   // intervals, summed once per clock tick rather than on every topics batch.
-  const rates = $derived.by(() => {
-    const now = clock.now;
-    return untrack(() => {
+  const rates = $derived(
+    atTick((now) => {
       const out = new Map<string, number>();
       for (const p of app.profiles) {
         let r = 0;
@@ -31,8 +30,8 @@
         out.set(p.id, r);
       }
       return out;
-    });
-  });
+    }),
+  );
 
   function subline(p: Profile, { state, error }: ConnInfo): string {
     switch (state) {
@@ -98,9 +97,10 @@
           title={offline ? "Double-click to connect" : ""}
         >
           <div class="flex items-center gap-2">
-            <span class="relative size-2 shrink-0 rounded-full {look[info.state].dot}">
-              {#if info.state === "connected"}{#key app.activity.get(p.id)}<span class="ping absolute inset-0 rounded-full text-ok"></span>{/key}{/if}
-            </span>
+            <!-- Re-keyed on every batch so the ring replays. -->
+            {#key app.activity.get(p.id)}
+              <span class="relative size-2 shrink-0 rounded-full {look[info.state].dot} {info.state === 'connected' ? 'ping' : ''}"></span>
+            {/key}
             <span class="truncate font-semibold {offline ? 'text-ink/60' : 'text-ink'}">{p.name || hostOf(p.broker)}</span>
           </div>
           <div class="pl-4 text-[11px] truncate {look[info.state].cls}" title={sub}>{sub}</div>
@@ -132,8 +132,8 @@
     {/each}
 
     {#if app.ready && !app.profiles.length}
-      <div class="px-4 py-8 text-xs text-muted leading-relaxed">
-        <div class="text-ink font-semibold text-sm mb-1">No connections yet</div>
+      <div class="empty">
+        <div class="empty-title">No connections yet</div>
         Paste a broker URL below. A bare host is enough to get started.
       </div>
     {/if}

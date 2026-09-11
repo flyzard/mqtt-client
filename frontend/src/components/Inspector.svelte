@@ -10,8 +10,8 @@
   {/key}
 {:else}
   <div class="h-full grid place-items-center">
-    <div class="text-center text-muted text-xs leading-relaxed max-w-xs">
-      <div class="text-ink font-semibold text-base tracking-tight mb-1">Pick a topic</div>
+    <div class="empty text-center max-w-xs">
+      <div class="empty-title text-base tracking-tight">Pick a topic</div>
       Messages, rate and a live chart of any numeric field show up here.
       <div class="mt-3 text-muted/80">Press <kbd>/</kbd> to filter topics · <kbd>⌘↵</kbd> to publish</div>
     </div>

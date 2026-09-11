@@ -56,7 +56,7 @@
     <input class="inp accent {profile ? 'accent-on' : ''} flex-1 min-w-0 font-mono text-sm px-3 py-2" placeholder="topic"
            bind:value={topic} onkeydown={key} spellcheck="false" autocomplete="off" />
     {#if profile}
-      <span class="chip shrink-0 py-1 brand" style="border-color: color-mix(in oklab, var(--brand) 45%, transparent)" title={profile.broker}>
+      <span class="chip shrink-0 py-1 brand border-current/45" title={profile.broker}>
         {profile.name || hostOf(profile.broker)}
       </span>
     {/if}
@@ -68,7 +68,7 @@
   <div class="flex items-center gap-3 text-xs text-muted">
     <label class="flex items-center gap-1">
       QoS
-      <select class="bg-transparent outline-none text-ink cursor-pointer" bind:value={qos}>
+      <select bind:value={qos}>
         {#each QOS_LEVELS as q (q)}<option value={q}>{q}</option>{/each}
       </select>
     </label>

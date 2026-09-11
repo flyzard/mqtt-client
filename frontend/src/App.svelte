@@ -20,10 +20,10 @@
 <div class="h-screen flex flex-col text-sm select-none" style={brand}>
   <!-- Title strip: draggable, and tall enough to clear the hidden-inset traffic lights on macOS.
        A barely-there wash of the connection colour, in the spirit of the hero gradient. -->
-  <div class="h-10 shrink-0 grid grid-cols-[260px_340px_minmax(0,1fr)] items-end border-b border-line"
-       style="--wails-draggable:drag; background: linear-gradient(to right, color-mix(in oklab, var(--brand) 6%, transparent), transparent 50%)">
-    <div class="pl-[84px] pb-2 text-[11px] uppercase tracking-wider text-muted">Connections</div>
-    <div class="pl-3 pb-2 text-[11px] uppercase tracking-wider text-muted">Topics</div>
+  <div class="h-10 shrink-0 grid grid-cols-panes items-end border-b border-line bg-linear-to-r from-(--brand)/6 to-transparent to-50%"
+       style="--wails-draggable:drag">
+    <div class="eyebrow pl-[84px] pb-2">Connections</div>
+    <div class="eyebrow pl-3 pb-2">Topics</div>
     <div class="pl-4 pr-4 pb-2 text-xs truncate font-mono text-muted" title={app.selectedTopic ?? ""}>
       {#each crumbs as part, i (i)}
         {#if i}<span class="text-ink/30">/</span>{/if}<span class={i === crumbs.length - 1 ? "text-ink" : ""}>{part}</span>
@@ -31,7 +31,7 @@
     </div>
   </div>
 
-  <div class="flex-1 min-h-0 grid grid-cols-[260px_340px_minmax(0,1fr)]">
+  <div class="flex-1 min-h-0 grid grid-cols-panes">
     <aside class="min-h-0 border-r border-line"><Sidebar /></aside>
     <section class="min-h-0 border-r border-line"><TopicTree /></section>
     <main class="min-h-0 flex flex-col">
