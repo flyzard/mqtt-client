@@ -1,0 +1,184 @@
+@import "tailwindcss";
+@import "@fontsource-variable/figtree";
+@import "@fontsource-variable/jetbrains-mono";
+
+/* Tokens follow DESIGN.md: a cream page, charcoal ink, and every grey derived
+   from that ink at some opacity (use `ink/40`, `ink/4`, ...). Colour beyond
+   that is limited to a muted status trio, the syntax tints for payloads, and
+   one per-connection identity colour (--brand). */
+@theme {
+  /* Camera Plain Variable is not available; Figtree is the closest humanist
+     variable face with a continuous weight axis. */
+  --font-sans: "Figtree Variable", "Camera Plain Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --color-cream: #f7f4ed;
+  --color-paper: #fcfbf8;
+  --color-ink: #1c1c1c;
+  --color-muted: #5f5f5d;
+  --color-line: #eceae4;
+
+  --color-ok: #4a8a58;
+  --color-warn: #b07a1e;
+  --color-bad: #b4423a;
+
+  --color-syn-key: #3f5f95;
+  --color-syn-str: #3d7a4a;
+  --color-syn-num: #9a6b12;
+  --color-syn-kw: #7a4f8e;
+
+  --shadow-soft: rgba(0, 0, 0, 0.1) 0px 4px 12px;
+}
+
+@layer base {
+  html, body, #app {
+    height: 100%;
+  }
+  body {
+    @apply bg-cream text-ink font-sans antialiased;
+    color-scheme: light;
+    overflow: hidden;
+  }
+  .font-mono, pre, code, textarea {
+    font-family: var(--font-mono);
+    font-feature-settings: "calt", "zero";
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-ink/15 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ink/30;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    appearance: none;
+  }
+  :root {
+    /* Identity colour of the selected connection; charcoal when none. */
+    --brand: var(--color-ink);
+    --accent: var(--color-line); /* idle colour of .accent bars */
+  }
+  input[type="checkbox"] {
+    accent-color: var(--color-ink);
+  }
+  select option {
+    @apply bg-paper text-ink;
+  }
+  kbd {
+    @apply font-mono text-[10px] text-ink border border-line rounded bg-paper px-1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  /* Inputs: paper on cream, a warm hairline, and a soft diffused shadow
+     instead of a sharp outline on focus. */
+  .inp {
+    @apply bg-paper text-ink rounded-md px-2.5 py-1.5 border border-line outline-none placeholder:text-muted/70;
+    transition: box-shadow 120ms, border-color 120ms;
+  }
+  .inp:focus {
+    border-color: rgb(28 28 28 / 0.4);
+    box-shadow: var(--shadow-soft);
+  }
+  /* Primary: charcoal with the signature inset highlight. */
+  .btn-primary {
+    @apply bg-ink text-paper rounded-md px-3.5 py-1.5 text-sm outline-none disabled:opacity-40;
+    box-shadow: rgb(255 255 255 / 0.2) 0px 0.5px 0px 0px inset, rgb(0 0 0 / 0.2) 0px 0px 0px 0.5px inset, rgb(0 0 0 / 0.05) 0px 1px 2px 0px;
+    transition: opacity 120ms, box-shadow 120ms;
+  }
+  .btn-primary:not(:disabled):active {
+    opacity: 0.8;
+  }
+  .btn-primary:focus-visible {
+    box-shadow: var(--shadow-soft);
+  }
+  /* Ghost: transparent with an interactive border. */
+  .btn {
+    @apply bg-transparent text-ink rounded-md px-3 py-1 text-sm outline-none border border-ink/40 hover:bg-ink/4 active:opacity-80;
+    transition: box-shadow 120ms, background-color 120ms;
+  }
+  .btn:focus-visible {
+    box-shadow: var(--shadow-soft);
+  }
+  /* Flat: toolbar buttons on the surface itself. */
+  .btn-flat {
+    @apply rounded-md px-2 py-0.5 text-muted hover:text-ink hover:bg-ink/4 active:opacity-80;
+  }
+  /* Pills are reserved for toggles and tags. */
+  .chip {
+    @apply rounded-full px-2 py-0.5 text-[11px] text-muted border border-line hover:text-ink active:opacity-80;
+  }
+  .chip-on {
+    @apply bg-ink text-paper border-ink;
+  }
+  /* Coloured bar on the leading edge. Call sites set --accent (a profile
+     colour) or add .accent-on for the selection colour; it falls back to the
+     idle hairline. Always present so toggling never shifts layout. */
+  .accent {
+    border-left: 3px solid var(--accent);
+  }
+  .accent-on {
+    --accent: var(--brand);
+  }
+  .accent-off {
+    --accent: transparent;
+  }
+  .sel {
+    @apply bg-ink/5;
+  }
+  .flash {
+    background: color-mix(in oklab, var(--color-warn) 16%, transparent);
+  }
+  .brand {
+    color: var(--brand);
+  }
+  /* Cards: bordered, never shadowed. */
+  .card {
+    @apply bg-paper border border-line rounded-lg;
+  }
+  .tile {
+    @apply bg-cream border border-line rounded-lg px-3 py-2 min-w-0;
+  }
+  .badge {
+    @apply inline-grid place-items-center h-4 px-1 rounded text-[9px] font-semibold tracking-wide shrink-0 text-ink border border-ink/40;
+  }
+  /* New message rows slide up into place. */
+  .rise {
+    animation: rise 180ms ease-out;
+  }
+  /* Expanding ring around a connection dot, replayed on every batch by
+     re-keying the element. */
+  .ping::after {
+    content: "";
+    @apply absolute inset-0 rounded-full;
+    background: currentColor;
+    animation: ping 600ms ease-out forwards;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes ping {
+  from {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  to {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}

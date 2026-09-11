@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=My Product
+Comment=A mqtt-client application
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/mqtt-client %u
+Terminal=false
+Type=Application
+Icon=mqtt-client
+Categories=Utility;
+StartupWMClass=mqtt-client
+
+ 
