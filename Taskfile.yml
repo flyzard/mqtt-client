@@ -34,6 +34,14 @@ tasks:
     cmds:
       - task: "{{.GOOS}}:run"
 
+  check:
+    summary: Runs every check a pull request must pass
+    cmds:
+      - go vet ./...
+      - go test ./...
+      - cd frontend && {{.PACKAGE_MANAGER}} run check
+      - cd frontend && {{.PACKAGE_MANAGER}} test
+
   dev:
     summary: Runs the application in development mode
     cmds:

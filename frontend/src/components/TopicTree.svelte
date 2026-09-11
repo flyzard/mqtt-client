@@ -136,7 +136,7 @@
       spellcheck="false"
       onkeydown={(e) => { if (e.key === "Escape") { filter = ""; e.currentTarget.blur(); } }}
     />
-    <button class="chip active:opacity-80 {byActivity ? 'chip-on' : 'hover:text-ink'}" title="Sort by message count" onclick={() => (byActivity = !byActivity)}>activity</button>
+    <button class="chip chip-toggle" class:chip-on={byActivity} title="Sort by message count" onclick={() => (byActivity = !byActivity)}>activity</button>
   </div>
 
   <div class="flex-1 min-h-0 overflow-y-auto py-1">

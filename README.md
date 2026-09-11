@@ -1,6 +1,6 @@
 # mqttc
 
-A small, fast desktop MQTT client. Connect to a broker, watch topics stream in real time, inspect payloads, and publish messages from a single window.
+A small, fast, open source desktop MQTT client. Connect to a broker, watch topics stream in real time, inspect payloads, and publish messages from a single window.
 
 Built with Go and [Wails v3](https://v3.wails.io/) on the backend and Svelte 5 with Tailwind on the frontend. MQTT connectivity uses the Eclipse Paho v5 client.
 
@@ -22,20 +22,7 @@ Requires Go 1.27+, Node.js, and the [Wails v3 CLI](https://v3.wails.io/getting-s
 task dev      # run with hot reload
 task build    # production build into bin/
 task package  # platform installer / bundle
-```
-
-Backend tests:
-
-```
-go test ./...
-```
-
-Frontend checks and tests:
-
-```
-cd frontend
-npm run check
-npm test
+task check    # vet, tests, type-check
 ```
 
 ## Layout
@@ -44,3 +31,11 @@ npm test
 - `internal/mqtt/`: broker sessions, message batching, and event delivery
 - `internal/services/`: profiles, secrets, and the session API exposed to the UI
 - `frontend/src/`: Svelte UI, with components under `components/` and state and helpers under `lib/`
+
+## Contributing
+
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the checks to run and how contributions are licensed. [DESIGN.md](DESIGN.md) describes the visual system if you are touching the UI.
+
+## License
+
+mqttc is open source under the [MIT License](LICENSE). Third-party components and their licences are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

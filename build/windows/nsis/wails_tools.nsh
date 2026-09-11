@@ -8,16 +8,16 @@
     !define INFO_PROJECTNAME "mqtt-client"
 !endif
 !ifndef INFO_COMPANYNAME
-    !define INFO_COMPANYNAME "Muxa"
+    !define INFO_COMPANYNAME "Joao Felizardo"
 !endif
 !ifndef INFO_PRODUCTNAME
-    !define INFO_PRODUCTNAME "My Product"
+    !define INFO_PRODUCTNAME "mqttc"
 !endif
 !ifndef INFO_PRODUCTVERSION
     !define INFO_PRODUCTVERSION "0.1.0"
 !endif
 !ifndef INFO_COPYRIGHT
-    !define INFO_COPYRIGHT "© 2026, Muxa"
+    !define INFO_COPYRIGHT "(c) 2026 Joao Felizardo"
 !endif
 !ifndef PRODUCT_EXECUTABLE
     !define PRODUCT_EXECUTABLE "${INFO_PROJECTNAME}.exe"

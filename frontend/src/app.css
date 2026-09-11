@@ -2,7 +2,7 @@
 @import "@fontsource-variable/figtree";
 @import "@fontsource-variable/jetbrains-mono";
 
-/* Tokens follow DESIGN.md: a cream page, charcoal ink, and every grey derived
+/* Tokens are documented in DESIGN.md: a cream page, charcoal ink, and every grey derived
    from that ink at some opacity (use `ink/40`, `ink/4`, ...). Colour beyond
    that is limited to a muted status trio, the syntax tints for payloads, and
    one per-connection identity colour (--brand). */
@@ -110,13 +110,20 @@
   .btn-flat {
     @apply rounded-md px-2 py-0.5 text-muted hover:text-ink hover:bg-ink/4 active:opacity-80;
   }
-  /* Pills are reserved for toggles and tags. Static by default: a toggle adds
-     its own hover for the off state, since .chip-on already inverts colours. */
+  /* Pills are reserved for toggles and tags. .chip is static; a chip that is
+     a control adds .chip-toggle, whose hover applies only in the off state so
+     it never fights the inverted colours of .chip-on. */
   .chip {
     @apply rounded-full px-2 py-0.5 text-[11px] text-muted border border-line;
   }
   .chip-on {
     @apply bg-ink text-paper border-ink;
+  }
+  .chip-toggle {
+    @apply active:opacity-80;
+  }
+  .chip-toggle:not(.chip-on):hover {
+    @apply text-ink;
   }
   /* Coloured bar on the leading edge. Call sites set --accent (a profile
      colour) or add .accent-on for the selection colour; it falls back to the

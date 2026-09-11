@@ -11,4 +11,9 @@ export default defineConfig({
     strictPort: true,
   },
   plugins: [svelte(), tailwindcss(), wails("./bindings")],
+  build: {
+    // Keep every font subset a separate lazy asset; a small one would
+    // otherwise be inlined into the stylesheet and loaded on every start.
+    assetsInlineLimit: (file) => (file.endsWith(".woff2") ? false : undefined),
+  },
 });
