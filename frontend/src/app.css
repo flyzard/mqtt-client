@@ -108,7 +108,7 @@
   }
   /* Flat: toolbar buttons on the surface itself. */
   .btn-flat {
-    @apply rounded-md px-2 py-0.5 text-muted hover:text-ink hover:bg-ink/4 active:opacity-80;
+    @apply rounded-md px-2 py-0.5 text-muted enabled:hover:text-ink enabled:hover:bg-ink/4 active:opacity-80 disabled:opacity-40;
   }
   /* Pills are reserved for toggles and tags. .chip is static; a chip that is
      a control adds .chip-toggle, whose hover applies only in the off state so
@@ -162,6 +162,50 @@
   }
   .empty-title {
     @apply text-ink font-semibold text-sm mb-1;
+  }
+  /* Drag handle over a pane's hairline border: a wider hit area than the
+     line itself, washed on hover and while dragging. The parent is relative. */
+  .resizer {
+    @apply absolute z-10 select-none;
+    transition: background-color 120ms;
+  }
+  .resizer-x {
+    @apply top-0 bottom-0 w-[7px] cursor-col-resize;
+  }
+  .resizer-y {
+    @apply left-0 right-0 h-[7px] cursor-row-resize;
+  }
+  .resizer-x.resizer-start { @apply -left-[3px]; }
+  .resizer-x.resizer-end { @apply -right-[3px]; }
+  .resizer-y.resizer-start { @apply -top-[3px]; }
+  .resizer-y.resizer-end { @apply -bottom-[3px]; }
+  /* Inspector master-detail. The list is sized by its rows and gives way
+     first (a huge shrink weight), so a topic with one message shows its
+     payload large while a busy one scrolls the list and keeps the detail at
+     the dragged size (--detail). Only once the list is at its minimum does
+     the detail shrink, down to --detail-min, so a short window still fits. */
+  .pane-list {
+    flex: 0 1000 auto;
+    @apply min-h-16;
+  }
+  .pane-detail {
+    flex: 1 1 var(--detail);
+    min-height: var(--detail-min);
+  }
+  .resizer:hover,
+  .resizer-on {
+    @apply bg-ink/10;
+  }
+  /* Keyboard cursor in the topic tree: a hairline inset outline, shown only
+     while the tree has focus so mouse users never see it. */
+  .tree:focus-within .tree-cursor {
+    @apply outline outline-ink/35 -outline-offset-1;
+  }
+  /* A payload line whose value differs from the previous message. Same
+     family as .flash: warn is the colour of "this just changed". */
+  .changed {
+    @apply bg-warn/12;
+    box-shadow: inset 2px 0 0 var(--color-warn);
   }
   /* New message rows slide up into place. */
   .rise {

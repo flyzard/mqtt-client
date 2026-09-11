@@ -2,7 +2,9 @@
   import { SvelteSet } from "svelte/reactivity";
   import { app } from "../lib/state.svelte";
   import { clock } from "../lib/clock.svelte";
+  import { reveal } from "../lib/dom";
   import { ago, fmtCount, isStale } from "../lib/format";
+  import { compileQuery } from "../lib/topics";
   import { canConnect, type TopicStats } from "../lib/types";
   import Payload from "./Payload.svelte";
 
@@ -18,13 +20,20 @@
   let byActivity = $state(false);
   let newFilter = $state("");
   let filterEl = $state<HTMLInputElement>();
+  let treeEl = $state<HTMLDivElement>();
   const collapsed = new SvelteSet<string>();
+  /** Row the arrow keys act on. Separate from the watched topic so branches
+   *  can be walked and folded without selecting anything. */
+  let cursor = $state<string | null>(null);
 
   const profileId = $derived(app.selectedProfile);
   const connState = $derived(profileId ? app.stateOf(profileId) : "disconnected");
   const stats = $derived(profileId ? app.topics.get(profileId) : undefined);
   const subs = $derived(profileId ? (app.subs.get(profileId) ?? []) : []);
-  const query = $derived(filter.trim().toLowerCase());
+  const query = $derived(filter.trim());
+  const matches = $derived(compileQuery(query));
+  // A filter shows everything it matched, so folding is suspended while one is set.
+  const canFold = $derived(query === "");
 
   // "/" focuses the filter unless the user is already typing somewhere.
   function hotkey(e: KeyboardEvent) {
@@ -43,10 +52,12 @@
 
   type Building = Omit<Node, "children"> & { children: Map<string, Building> };
 
-  const tree = $derived.by(() => {
+  // The root plus every branch path (for fold/unfold all), collected in the
+  // same pass that sorts the children.
+  const built = $derived.by(() => {
     const root: Building = { name: "", path: "", count: 0, children: new Map() };
     for (const [path, s] of stats ?? []) {
-      if (query && !path.toLowerCase().includes(query)) continue;
+      if (!matches(path)) continue;
       let cur = root;
       for (const part of path.split("/")) {
         let n = cur.children.get(part);
@@ -59,22 +70,108 @@
       }
       cur.stats = s;
     }
-    return finish(root);
+    const branches: string[] = [];
+    return { tree: finish(root, branches), branches };
   });
+  const tree = $derived(built.tree);
+  const branches = $derived(built.branches);
 
   // Sort once per rebuild rather than once per render of every open node.
-  function finish(b: Building): Node {
-    const children = [...b.children.values()].map(finish).sort(byActivity ? byCount : byName);
+  function finish(b: Building, branches: string[]): Node {
+    const children = [...b.children.values()].map((k) => finish(k, branches)).sort(byActivity ? byCount : byName);
+    if (b.path && children.length) branches.push(b.path);
     return { name: b.name, path: b.path, stats: b.stats, count: b.count, children };
   }
+
+  const isOpen = (path: string) => !canFold || !collapsed.has(path);
+  const allFolded = $derived(branches.length > 0 && branches.every((p) => collapsed.has(p)));
+
+  /** Rows in display order: what the keyboard walks. Only read from key
+   *  handlers, so it is rebuilt at most once per keypress. */
+  const visible = $derived.by(() => {
+    const out: Node[] = [];
+    const walk = (n: Node) => {
+      for (const k of n.children) {
+        out.push(k);
+        if (k.children.length && isOpen(k.path)) walk(k);
+      }
+    };
+    walk(tree);
+    return out;
+  });
+  const rowAt = (path: string | null) => (path === null ? -1 : visible.findIndex((n) => n.path === path));
 
   function toggle(path: string) {
     if (!collapsed.delete(path)) collapsed.add(path);
   }
+  function foldAll(fold: boolean) {
+    if (fold) for (const p of branches) collapsed.add(p);
+    else collapsed.clear();
+  }
   function activate(c: Node) {
+    cursor = c.path;
     if (c.stats) void app.selectTopic(c.path);
     else toggle(c.path);
   }
+
+  // ---- keyboard -----------------------------------------------------------------
+  function moveTo(c: Node) {
+    cursor = c.path;
+    // Walking onto a topic shows it; walking onto a branch only moves the cursor.
+    if (c.stats) void app.selectTopic(c.path);
+    void reveal(treeEl, "data-path", c.path);
+  }
+
+  const HANDLED = new Set(["ArrowDown", "ArrowUp", "ArrowLeft", "ArrowRight", "Home", "End", "Enter", " "]);
+
+  function keys(e: KeyboardEvent) {
+    if (!HANDLED.has(e.key) || !visible.length) return;
+    e.preventDefault();
+    const i = rowAt(cursor ?? app.selectedTopic);
+    const cur = i >= 0 ? visible[i] : undefined;
+    const go = (j: number) => moveTo(visible[Math.max(0, Math.min(visible.length - 1, j))]);
+    switch (e.key) {
+      case "ArrowDown": return go(i + 1);
+      case "ArrowUp": return go(i < 0 ? 0 : i - 1);
+      case "Home": return go(0);
+      case "End": return go(visible.length - 1);
+      case "ArrowRight":
+        if (!cur) return go(0);
+        if (!cur.children.length) return;
+        if (!isOpen(cur.path)) return toggle(cur.path);
+        return go(i + 1);
+      case "ArrowLeft": {
+        if (!cur) return;
+        if (cur.children.length && isOpen(cur.path) && canFold) return toggle(cur.path);
+        const parent = rowAt(cur.path.slice(0, cur.path.lastIndexOf("/")));
+        if (parent >= 0) moveTo(visible[parent]);
+        return;
+      }
+      default: // Enter, Space
+        if (cur) activate(cur);
+    }
+  }
+
+  // From the filter box: Enter opens the first matching topic, ↓ steps into the tree.
+  function filterKeys(e: KeyboardEvent & { currentTarget: HTMLInputElement }) {
+    if (e.key === "Escape") {
+      filter = "";
+      e.currentTarget.blur();
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      treeEl?.focus();
+      const c = visible[Math.max(0, rowAt(cursor))];
+      if (c) moveTo(c);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const first = visible.find((n) => n.stats);
+      if (first) {
+        treeEl?.focus();
+        moveTo(first);
+      }
+    }
+  }
+
   async function addSub() {
     const f = newFilter.trim();
     if (!f) return;
@@ -85,23 +182,29 @@
 
 {#snippet row(c: Node, depth: number)}
   {@const s = c.stats}
-  {@const open = query !== "" || !collapsed.has(c.path)}
+  {@const open = isOpen(c.path)}
   {@const selected = app.selectedTopic === c.path}
   {@const stale = s ? isStale(s, clock.now) : false}
+  <!-- svelte-ignore a11y_click_events_have_key_events -- keys are handled once, on the role="tree" container -->
   <div
     class={[
-      "flex items-center gap-1.5 h-7 pr-2 cursor-pointer transition-colors duration-300 accent",
+      "flex items-center gap-1.5 h-7 pr-2 cursor-pointer transition-colors duration-300 accent outline-none",
       selected ? "accent-on sel" : ["accent-off", app.flashing.has(c.path) ? "flash" : "hover:bg-ink/3"],
+      cursor === c.path && !selected && "tree-cursor",
       stale && !selected && "opacity-50",
     ]}
     style="padding-left: {5 + depth * 14}px"
-    role="button"
-    tabindex="0"
+    role="treeitem"
+    aria-level={depth + 1}
+    aria-selected={selected}
+    aria-expanded={c.children.length ? open : undefined}
+    tabindex="-1"
+    data-path={c.path}
     onclick={() => activate(c)}
-    onkeydown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(c); } }}
   >
     {#if c.children.length}
-      <button class="w-3 shrink-0 text-muted text-[10px] outline-none" tabindex="-1" onclick={(e) => { e.stopPropagation(); toggle(c.path); }}>
+      <button class="w-3 shrink-0 text-muted text-[10px] outline-none" tabindex="-1" title={open ? "Collapse" : "Expand"}
+              onclick={(e) => { e.stopPropagation(); cursor = c.path; toggle(c.path); }}>
         {open ? "▾" : "▸"}
       </button>
     {:else}<span class="w-3 shrink-0"></span>{/if}
@@ -132,14 +235,22 @@
       bind:this={filterEl}
       class="inp flex-1 min-w-0 text-xs"
       placeholder="filter   /"
+      title="Substring, or an MQTT filter like vault/+/version"
       bind:value={filter}
       spellcheck="false"
-      onkeydown={(e) => { if (e.key === "Escape") { filter = ""; e.currentTarget.blur(); } }}
+      onkeydown={filterKeys}
     />
     <button class="chip chip-toggle" class:chip-on={byActivity} title="Sort by message count" onclick={() => (byActivity = !byActivity)}>activity</button>
+    <button class="btn-flat text-[11px] px-1.5"
+            disabled={!branches.length || !canFold}
+            title={!canFold ? "Clear the filter to fold branches" : allFolded ? "Expand every branch" : "Collapse every branch"}
+            onclick={() => foldAll(!allFolded)}>
+      {allFolded ? "unfold" : "fold"}
+    </button>
   </div>
 
-  <div class="flex-1 min-h-0 overflow-y-auto py-1">
+  <div bind:this={treeEl} class="tree flex-1 min-h-0 overflow-y-auto py-1 outline-none"
+       role="tree" aria-label="topics" tabindex="0" onkeydown={keys}>
     {#if !profileId}
       <div class="empty">
         <div class="empty-title">No connection selected</div>
@@ -167,17 +278,17 @@
   </div>
 
   {#if profileId}
-    <div class="border-t border-line px-3 py-1.5 text-[11px] text-muted flex flex-wrap items-center gap-x-1.5 gap-y-1">
-      <span>via</span>
+    <div class="border-t border-line px-3 py-1.5 text-[11px] text-muted flex flex-wrap items-center gap-1.5">
+      <span class="mr-0.5" title="Topic filters this connection is subscribed to">subscribed to</span>
       {#each subs as s (s.filter)}
-        <span class="inline-flex items-center gap-1 font-mono text-ink" title="QoS {s.qos}">
+        <span class="chip inline-flex items-center gap-1 font-mono text-ink pr-1" title="QoS {s.qos}">
           {s.filter}
-          <button class="text-muted/70 hover:text-bad" title="Unsubscribe" onclick={() => app.unsubscribe(s.filter)}>×</button>
+          <button class="text-muted/70 hover:text-bad leading-none px-0.5" title="Unsubscribe from {s.filter}" onclick={() => app.unsubscribe(s.filter)}>×</button>
         </span>
-        <span class="text-ink/30">·</span>
       {/each}
       <form class="inline-flex" onsubmit={(e) => { e.preventDefault(); addSub(); }}>
-        <input class="bg-transparent outline-none font-mono w-24 text-ink placeholder:text-muted/70" placeholder="+ filter" bind:value={newFilter} spellcheck="false" />
+        <input class="bg-transparent outline-none font-mono w-28 text-ink placeholder:text-muted/70" placeholder="+ filter"
+               title="Subscribe to another filter, e.g. sensors/+/temp" bind:value={newFilter} spellcheck="false" />
       </form>
     </div>
   {/if}

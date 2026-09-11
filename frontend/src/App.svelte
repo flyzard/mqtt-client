@@ -2,10 +2,13 @@
   import { onDestroy, onMount } from "svelte";
   import { app } from "./lib/state.svelte";
   import { profileColor } from "./lib/color";
+  import { clamp } from "./lib/format";
+  import { layout } from "./lib/prefs.svelte";
   import Sidebar from "./components/Sidebar.svelte";
   import TopicTree from "./components/TopicTree.svelte";
   import Inspector from "./components/Inspector.svelte";
   import PublishBar from "./components/PublishBar.svelte";
+  import Resizer from "./components/Resizer.svelte";
   import Toasts from "./components/Toasts.svelte";
 
   onMount(() => app.init());
@@ -15,9 +18,17 @@
   // connection tag. Everything else stays charcoal.
   const brand = $derived(app.selectedProfile ? `--brand: ${profileColor(app.selectedProfile)}` : "");
   const crumbs = $derived(app.selectedTopic?.split("/") ?? []);
+
+  // Pane widths come from the persisted layout; the title strip shares the
+  // template so its labels stay aligned. The inspector always keeps room.
+  let innerWidth = $state(1280);
+  const treeMax = $derived(clamp(innerWidth - layout.sidebar.value - layout.inspectorMin, layout.tree.min, layout.tree.max));
+  const cols = $derived(`--grid-template-columns-panes: ${layout.sidebar.value}px ${layout.tree.value}px minmax(0, 1fr)`);
 </script>
 
-<div class="h-screen flex flex-col text-sm select-none" style={brand}>
+<svelte:window bind:innerWidth />
+
+<div class="h-screen flex flex-col text-sm select-none" style="{brand}; {cols}">
   <!-- Title strip: draggable, and tall enough to clear the hidden-inset traffic lights on macOS.
        A barely-there wash of the connection colour, in the spirit of the hero gradient. -->
   <div class="h-10 shrink-0 grid grid-cols-panes items-end border-b border-line bg-linear-to-r from-(--brand)/6 to-transparent to-50%"
@@ -32,10 +43,16 @@
   </div>
 
   <div class="flex-1 min-h-0 grid grid-cols-panes">
-    <aside class="min-h-0 border-r border-line"><Sidebar /></aside>
-    <section class="min-h-0 border-r border-line"><TopicTree /></section>
+    <aside class="relative min-h-0 border-r border-line">
+      <Sidebar />
+      <Resizer bind:value={layout.sidebar.value} min={layout.sidebar.min} max={layout.sidebar.max} reset={layout.sidebar.initial} />
+    </aside>
+    <section class="relative min-h-0 border-r border-line">
+      <TopicTree />
+      <Resizer bind:value={layout.tree.value} min={layout.tree.min} max={treeMax} reset={layout.tree.initial} />
+    </section>
     <main class="min-h-0 flex flex-col">
-      <div class="flex-1 min-h-0"><Inspector /></div>
+      <div class="flex-1 min-h-0 overflow-hidden"><Inspector /></div>
       <PublishBar />
     </main>
   </div>

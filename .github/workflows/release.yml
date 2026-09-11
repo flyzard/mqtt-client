@@ -44,6 +44,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev libfuse2t64
 
+      # The runner image ships NSIS but does not put it on PATH; install it if it is missing.
+      - name: Install NSIS
+        if: runner.os == 'Windows'
+        run: |
+          if [ ! -x "/c/Program Files (x86)/NSIS/makensis.exe" ]; then
+            choco install nsis -y --no-progress
+          fi
+          echo 'C:\Program Files (x86)\NSIS' >> "$GITHUB_PATH"
+
       - name: Install the Wails CLI matching go.mod
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@"$(go list -m -f '{{.Version}}' github.com/wailsapp/wails/v3)"
 

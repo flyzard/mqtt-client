@@ -13,7 +13,9 @@
     <div class="empty text-center max-w-xs">
       <div class="empty-title text-base tracking-tight">Pick a topic</div>
       Messages, rate and a live chart of any numeric field show up here.
-      <div class="mt-3 text-muted/80">Press <kbd>/</kbd> to filter topics · <kbd>⌘↵</kbd> to publish</div>
+      <div class="mt-3 text-muted/80 leading-loose">
+        <kbd>/</kbd> filter topics · <kbd>↑</kbd><kbd>↓</kbd> walk them · <kbd>⌘↵</kbd> publish
+      </div>
     </div>
   </div>
 {/if}

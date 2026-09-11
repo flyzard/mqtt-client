@@ -274,10 +274,14 @@ export class AppState {
     return this.run(() => this.rpc.unsubscribe(id, filter));
   }
 
+  /** Resolves true once the broker accepted the publish, undefined on failure. */
   publish(p: PublishInput) {
     const id = this.selectedProfile;
     if (!id) return this.fail(new Error("select a connection first"));
-    return this.run(() => this.rpc.publish(id, p));
+    return this.run(async () => {
+      await this.rpc.publish(id, p);
+      return true as const;
+    });
   }
 
   /** Clears the watched topic's history. The UI updates when the backend's

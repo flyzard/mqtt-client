@@ -20,6 +20,9 @@ export function isStale(s: Pick<TopicStats, "avgInterval" | "lastSeen">, now: nu
   return now - s.lastSeen > Math.max(10_000, s.avgInterval * 5);
 }
 
+/** `n` kept within [min, max]. */
+export const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+
 /** A number and its unit, kept apart so the UI can style them differently. */
 export type Quantity = [num: string, unit?: string];
 const NONE: Quantity = ["—"];

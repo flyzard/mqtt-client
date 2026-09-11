@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tick } from "svelte";
   import { app } from "../lib/state.svelte";
   import { atTick } from "../lib/clock.svelte";
   import { canConnect, type ConnInfo, type ConnState, type Profile } from "../lib/types";
@@ -7,7 +8,20 @@
   import { fmtRate, rateOf } from "../lib/format";
 
   let url = $state("");
+  let urlEl = $state<HTMLInputElement>();
   let editing = $state<Profile | null>(null);
+  /** The add form is a single row until asked for, except on first run. */
+  let adding = $state(false);
+  const showAdd = $derived(adding || (app.ready && !app.profiles.length));
+  async function openAdd() {
+    adding = true;
+    await tick();
+    urlEl?.focus();
+  }
+  function closeAdd() {
+    adding = false;
+    url = "";
+  }
 
   /** Status dot and subline colour per connection state. */
   const busy = { dot: "bg-warn animate-pulse", cls: "text-warn" };
@@ -60,7 +74,7 @@
     }
     const stored = await app.saveProfile({ id: "", clientId: "", hasPassword: false, cleanStart: true, insecure: false, ...parsed });
     if (!stored) return;
-    url = "";
+    closeAdd();
     app.selectProfile(stored.id);
     await app.connect(stored.id);
   }
@@ -139,17 +153,31 @@
     {/if}
   </div>
 
-  <div class="border-t border-line px-3 py-3">
-    <div class="text-xs text-ink mb-1.5">Add connection</div>
-    <form onsubmit={(e) => { e.preventDefault(); add(); }}>
-      <input
-        class="inp w-full font-mono text-xs"
-        placeholder="mqtts://user:pass@host:8883"
-        bind:value={url}
-        spellcheck="false"
-        autocomplete="off"
-      />
-    </form>
-    <div class="text-[10px] text-muted/80 mt-1.5">Enter to add and connect. A bare host defaults to tcp on 1883.</div>
+  <div class="border-t border-line">
+    {#if showAdd}
+      <form class="px-3 py-3" onsubmit={(e) => { e.preventDefault(); add(); }}>
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs text-ink">Add connection</span>
+          {#if app.profiles.length}
+            <button class="btn-flat text-[11px] -mr-2" type="button" onclick={closeAdd}>cancel</button>
+          {/if}
+        </div>
+        <input
+          bind:this={urlEl}
+          class="inp w-full font-mono text-xs"
+          placeholder="mqtts://user:pass@host:8883"
+          bind:value={url}
+          spellcheck="false"
+          autocomplete="off"
+          onkeydown={(e) => { if (e.key === "Escape" && app.profiles.length) closeAdd(); }}
+        />
+        <div class="text-[10px] text-muted/80 mt-1.5">Enter to add and connect. A bare host defaults to tcp on 1883.</div>
+      </form>
+    {:else}
+      <button class="w-full text-left px-4 py-2.5 text-xs text-muted hover:text-ink hover:bg-ink/3 transition-colors"
+              onclick={openAdd}>
+        + Add connection
+      </button>
+    {/if}
   </div>
 </div>
