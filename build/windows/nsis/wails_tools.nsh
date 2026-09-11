@@ -5,7 +5,7 @@
 !include "FileFunc.nsh"
 
 !ifndef INFO_PROJECTNAME
-    !define INFO_PROJECTNAME "mqtt-client"
+    !define INFO_PROJECTNAME "mqttc"
 !endif
 !ifndef INFO_COMPANYNAME
     !define INFO_COMPANYNAME "Joao Felizardo"

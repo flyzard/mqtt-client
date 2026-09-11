@@ -3,11 +3,11 @@ Version=1.0
 Name=mqttc
 Comment=A small, fast desktop MQTT client
 # The Exec line includes %u to pass the URL to the application
-Exec=/usr/local/bin/mqtt-client %u
+Exec=/usr/local/bin/mqttc %u
 Terminal=false
 Type=Application
-Icon=mqtt-client
+Icon=mqttc
 Categories=Utility;
-StartupWMClass=mqtt-client
+StartupWMClass=mqttc
 
  

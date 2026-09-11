@@ -14,6 +14,29 @@ Built with Go and [Wails v3](https://v3.wails.io/) on the backend and Svelte 5 w
 - **Publish bar** for sending messages to any topic.
 - **TLS support**, with an insecure toggle for local dev brokers.
 
+## Download
+
+Grab the installer for your platform from the [latest release](https://github.com/flyzard/mqtt-client/releases/latest):
+
+- macOS: `mqttc-macos-universal.dmg` (Apple Silicon and Intel, macOS 13 or newer)
+- Windows: `mqttc-windows-amd64-installer.exe`
+- Linux: `mqttc-linux-amd64.deb`, `mqttc-linux-amd64.rpm`, or `mqttc-linux-amd64.AppImage` (needs GTK 4 and WebKitGTK 6.0, so Ubuntu 24.04, Debian 13, Fedora 40 or newer)
+
+Every release ships a `SHA256SUMS.txt` you can check downloads against.
+
+### First launch
+
+The builds are not code signed yet, so each OS warns once.
+
+- **macOS** reports the app as damaged because it was downloaded from the internet. Drag it to Applications, then run this once in Terminal:
+
+  ```
+  xattr -cr /Applications/mqttc.app
+  ```
+
+- **Windows** shows a SmartScreen dialog. Click "More info", then "Run anyway".
+- **Linux** has no such gate. The AppImage needs to be made executable with `chmod +x` first.
+
 ## Development
 
 Requires Go 1.27+, Node.js, and the [Wails v3 CLI](https://v3.wails.io/getting-started/installation/).

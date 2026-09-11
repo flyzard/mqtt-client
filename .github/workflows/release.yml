@@ -1,0 +1,121 @@
+# Builds and packages mqttc for macOS, Windows and Linux when a v* tag is pushed,
+# then opens a draft GitHub Release with every installer and a checksum file.
+# Publish the draft from the Releases page once you have looked at it.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: macos, os: macos-15 }
+          - { name: windows, os: windows-2025 }
+          - { name: linux, os: ubuntu-24.04 }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev libfuse2t64
+
+      - name: Install the Wails CLI matching go.mod
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@"$(go list -m -f '{{.Version}}' github.com/wailsapp/wails/v3)"
+
+      - name: Stamp the tag version into build assets
+        run: build/set-version.sh "$GITHUB_REF_NAME"
+
+      - name: Package for macOS (universal DMG)
+        if: runner.os == 'macOS'
+        run: |
+          wails3 task darwin:package:universal
+          wails3 task darwin:create:dmg
+          mkdir -p dist
+          mv bin/*.dmg dist/mqttc-macos-universal.dmg
+
+      - name: Package for Windows (NSIS installer)
+        if: runner.os == 'Windows'
+        run: |
+          wails3 task windows:package
+          mkdir -p dist
+          mv bin/*-installer.exe dist/mqttc-windows-amd64-installer.exe
+
+      - name: Package for Linux (deb and rpm)
+        if: runner.os == 'Linux'
+        env:
+          # nfpm.yaml builds the package maintainer field from these
+          GIT_COMMITTER_NAME: Joao Felizardo
+          GIT_COMMITTER_EMAIL: flyzard@users.noreply.github.com
+        run: |
+          wails3 task linux:create:deb
+          wails3 task linux:create:rpm
+          mkdir -p dist
+          mv bin/*.deb dist/mqttc-linux-amd64.deb
+          mv bin/*.rpm dist/mqttc-linux-amd64.rpm
+
+      # AppImage bundling is the most fragile step, so it never blocks a release.
+      - name: Package for Linux (AppImage)
+        if: runner.os == 'Linux'
+        continue-on-error: true
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: "1"
+        run: |
+          wails3 task linux:create:appimage
+          mv bin/*.AppImage dist/mqttc-linux-amd64.AppImage
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Write checksums
+        run: cd dist && sha256sum * | tee SHA256SUMS.txt
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          extra=()
+          [[ "$GITHUB_REF_NAME" == *-* ]] && extra+=(--prerelease)
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            --draft "${extra[@]}"

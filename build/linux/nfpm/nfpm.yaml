@@ -3,7 +3,7 @@
 #
 # The lines below are called `modelines`. See `:help modeline`
 
-name: "mqtt-client"
+name: "mqttc"
 arch: ${GOARCH}
 platform: "linux"
 version: "0.1.0"
@@ -12,17 +12,17 @@ priority: "extra"
 maintainer: ${GIT_COMMITTER_NAME} <${GIT_COMMITTER_EMAIL}>
 description: "A small, fast desktop MQTT client"
 vendor: "Joao Felizardo"
-homepage: "https://wails.io"
+homepage: "https://github.com/flyzard/mqtt-client"
 license: "MIT"
 release: "1"
 
 contents:
-  - src: "./bin/mqtt-client"
-    dst: "/usr/local/bin/mqtt-client"
+  - src: "./bin/mqttc"
+    dst: "/usr/local/bin/mqttc"
   - src: "./build/appicon.png"
-    dst: "/usr/share/icons/hicolor/128x128/apps/mqtt-client.png"
-  - src: "./build/linux/mqtt-client.desktop"
-    dst: "/usr/share/applications/mqtt-client.desktop"
+    dst: "/usr/share/icons/hicolor/128x128/apps/mqttc.png"
+  - src: "./build/linux/mqttc.desktop"
+    dst: "/usr/share/applications/mqttc.desktop"
 
 # Default dependencies for the GTK4 + WebKitGTK 6.0 stack (Ubuntu 24.04+ / Debian 13+)
 depends:

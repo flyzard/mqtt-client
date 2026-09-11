@@ -3,7 +3,7 @@
 <plist version="1.0">
 	<dict>
 		<key>CFBundleExecutable</key>
-		<string>mqtt-client</string>
+		<string>mqttc</string>
 		<key>CFBundleGetInfoString</key>
 		<string>Open source under the MIT License</string>
 		<key>CFBundleIconFile</key>
