@@ -1,4 +1,4 @@
-# mqttc
+# <img src="docs/icon.svg" width="40" height="40" alt="" align="top"> mqttc
 
 A small, fast, open source desktop MQTT client. Connect to a broker, watch topics stream in real time, inspect payloads, and publish messages from a single window.
 

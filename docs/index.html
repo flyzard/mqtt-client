@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>mqttc</title>
 <meta name="description" content="A small, fast, open source desktop MQTT client for macOS, Windows and Linux.">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -36,7 +37,10 @@
     border-bottom: 1px solid var(--line);
     background: linear-gradient(to right, color-mix(in srgb, var(--brand) 6%, transparent), transparent 50%);
   }
+  .strip .mark { display: inline-flex; align-items: center; gap: 8px; }
+  .strip .mark img { width: 16px; height: 16px; display: block; }
   .strip .crumbs { font: 12px var(--mono); color: var(--muted); }
+  h1 img { width: 56px; height: 56px; vertical-align: -10px; margin-right: 14px; }
   .strip .crumbs b { color: var(--ink); font-weight: 400; }
   .strip .crumbs i { color: color-mix(in srgb, var(--ink) 30%, transparent); font-style: normal; }
   .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
@@ -104,12 +108,12 @@
 </head>
 <body>
 <div class="strip">
-  <span class="eyebrow">mqttc</span>
+  <span class="mark"><img src="icon.svg" alt=""><span class="eyebrow">mqttc</span></span>
   <span class="crumbs" aria-hidden="true">download<i> / </i><b id="crumb">latest</b></span>
 </div>
 
 <main>
-  <h1>mqttc</h1>
+  <h1><img src="icon.svg" alt="">mqttc</h1>
   <p class="tag">A small, fast, open source desktop MQTT client. Connect to a broker, watch topics stream in, inspect payloads, and publish, all from one window.</p>
 
   <div class="hero">

@@ -8,8 +8,6 @@
 		<string>Open source under the MIT License</string>
 		<key>CFBundleIconFile</key>
 		<string>icons</string>
-		<key>CFBundleIconName</key>
-		<string>appicon</string>
 		<key>CFBundleIdentifier</key>
 		<string>com.joaofelizardo.mqttc</string>
 		<key>CFBundleName</key>

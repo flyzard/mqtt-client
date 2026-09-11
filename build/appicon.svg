@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <!-- mqttc mark. Source of truth for build/appicon.png (run `wails3 task common:generate:icons`)
+       and for the glyph-only copy in appicon.icon/Assets. Tile follows the macOS icon grid:
+       824px centred, 22.5% corner radius. -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="#1c1c1c"/>
+  <g fill="none"><path d="M300 380H724M396 512H724M492 644H612" stroke="#f7f4ed" stroke-width="76" stroke-linecap="round"/><circle cx="712" cy="644" r="46" fill="#c2613f"/></g>
+</svg>
