@@ -16,7 +16,7 @@ Built with Go and [Wails v3](https://v3.wails.io/) on the backend and Svelte 5 w
 
 ## Download
 
-Grab the installer for your platform from the [latest release](https://github.com/flyzard/mqtt-client/releases/latest):
+Grab the installer for your platform from the [download page](https://flyzard.github.io/mqtt-client/) or the [latest release](https://github.com/flyzard/mqtt-client/releases/latest):
 
 - macOS: `mqttc-macos-universal.dmg` (Apple Silicon and Intel, macOS 13 or newer)
 - Windows: `mqttc-windows-amd64-installer.exe`

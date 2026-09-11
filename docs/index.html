@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mqttc</title>
+<meta name="description" content="A small, fast, open source desktop MQTT client for macOS, Windows and Linux.">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fafaf9; --fg: #1c1917; --muted: #78716c; --card: #ffffff; --line: #e7e5e4;
+    --accent: #0f766e; --accent-fg: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0c0a09; --fg: #f5f5f4; --muted: #a8a29e; --card: #1c1917; --line: #292524; --accent: #2dd4bf; --accent-fg: #042f2e; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 720px; margin: 0 auto; padding: 64px 20px 48px; }
+  h1 { font-size: 2.6rem; margin: 0 0 8px; letter-spacing: -0.02em; }
+  .tag { color: var(--muted); font-size: 1.15rem; margin: 0 0 32px; }
+  .primary { display: inline-block; background: var(--accent); color: var(--accent-fg); text-decoration: none; font-weight: 600; padding: 14px 22px; border-radius: 10px; }
+  .primary small { display: block; font-weight: 400; opacity: .85; font-size: .85rem; }
+  .version { color: var(--muted); font-size: .9rem; margin: 12px 0 40px; }
+  h2 { font-size: 1.1rem; margin: 32px 0 12px; }
+  ul.dl { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+  ul.dl li { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
+  ul.dl a { color: var(--accent); font-weight: 600; text-decoration: none; }
+  ul.dl span { color: var(--muted); font-size: .9rem; }
+  code { font-family: ui-monospace, "JetBrains Mono", Menlo, monospace; font-size: .9em; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 1px 6px; }
+  pre { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; overflow-x: auto; }
+  pre code { border: 0; padding: 0; background: none; }
+  .note { color: var(--muted); font-size: .95rem; }
+  footer { margin-top: 48px; color: var(--muted); font-size: .9rem; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <h1>mqttc</h1>
+  <p class="tag">A small, fast, open source desktop MQTT client. Connect to a broker, watch topics stream in, inspect payloads, and publish, all from one window.</p>
+
+  <a class="primary" id="primary" href="https://github.com/flyzard/mqtt-client/releases/latest">Download<small id="primary-sub">See all releases</small></a>
+  <p class="version" id="version">Free and open source under the MIT License.</p>
+
+  <h2>All downloads</h2>
+  <ul class="dl">
+    <li><a data-os="mac" href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-macos-universal.dmg">macOS</a><span>Universal DMG, Apple Silicon and Intel, macOS 13+</span></li>
+    <li><a data-os="win" href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-windows-amd64-installer.exe">Windows</a><span>Installer, 64-bit</span></li>
+    <li><a data-os="linux" href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-linux-amd64.deb">Linux .deb</a><span>Ubuntu 24.04+, Debian 13+</span></li>
+    <li><a href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-linux-amd64.rpm">Linux .rpm</a><span>Fedora 40+</span></li>
+    <li><a href="https://github.com/flyzard/mqtt-client/releases/latest/download/mqttc-linux-amd64.AppImage">Linux AppImage</a><span>Needs GTK 4 and WebKitGTK 6.0 installed</span></li>
+  </ul>
+  <p class="note">Checksums for every file are in <code>SHA256SUMS.txt</code> on the <a href="https://github.com/flyzard/mqtt-client/releases/latest">release page</a>.</p>
+
+  <h2>First launch</h2>
+  <p class="note">The builds are not code signed yet, so your OS warns once.</p>
+  <p><strong>macOS</strong> says the app is damaged. Drag it to Applications, then run this once in Terminal:</p>
+  <pre><code>xattr -cr /Applications/mqttc.app</code></pre>
+  <p><strong>Windows</strong> shows a SmartScreen dialog. Click <em>More info</em>, then <em>Run anyway</em>.</p>
+
+  <footer>
+    <a href="https://github.com/flyzard/mqtt-client">Source on GitHub</a> ·
+    <a href="https://github.com/flyzard/mqtt-client/issues">Report an issue</a> ·
+    <a href="https://github.com/flyzard/mqtt-client/blob/main/LICENSE">MIT License</a>
+  </footer>
+</main>
+<script>
+  (function () {
+    var ua = navigator.userAgent, plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "";
+    var os = /Mac/i.test(plat) ? "mac" : /Win/i.test(plat) ? "win" : /Linux/i.test(plat) && !/Android/i.test(ua) ? "linux" : null;
+    var label = { mac: "Download for macOS", win: "Download for Windows", linux: "Download for Linux (.deb)" };
+    if (os) {
+      var link = document.querySelector('ul.dl a[data-os="' + os + '"]');
+      var btn = document.getElementById("primary");
+      btn.href = link.href;
+      btn.firstChild.textContent = label[os];
+      document.getElementById("primary-sub").textContent = "Other platforms below";
+    }
+    fetch("https://api.github.com/repos/flyzard/mqtt-client/releases/latest")
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (rel) {
+        if (!rel) return;
+        var d = new Date(rel.published_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+        document.getElementById("version").textContent = "Latest release " + rel.tag_name + ", " + d + ". Free and open source under the MIT License.";
+      })
+      .catch(function () {});
+  })();
+</script>
+</body>
+</html>
