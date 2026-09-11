@@ -6,6 +6,7 @@
   import { Transient } from "../lib/transient.svelte";
   import { QOS_LEVELS } from "../lib/types";
   import { hostOf } from "../lib/broker";
+  import Chevron from "./Chevron.svelte";
 
   let payloadEl = $state<HTMLTextAreaElement>();
   const open = $derived(layout.publishOpen.value);
@@ -65,10 +66,10 @@
 
 <div class="shrink-0 border-t border-line px-4 py-2 flex flex-col gap-2">
   <div class="flex items-center gap-2 min-h-8">
-    <button class="btn-flat -ml-2 px-1.5 text-[10px] text-muted shrink-0" aria-expanded={open}
+    <button class="btn-flat -ml-2 px-1 h-7 grid place-items-center text-muted shrink-0" aria-expanded={open}
             title={open ? "Collapse the publish bar" : "Expand the publish bar"}
             onclick={() => (layout.publishOpen.value = !open)}>
-      {open ? "▾" : "▸"}
+      <Chevron {open} />
     </button>
     {#if open}
       <input class="inp accent {profile ? 'accent-on' : ''} flex-1 min-w-0 font-mono text-sm px-3 py-2" placeholder="topic"

@@ -6,6 +6,7 @@
   import { ago, fmtCount, isStale } from "../lib/format";
   import { compileQuery } from "../lib/topics";
   import { canConnect, type TopicStats } from "../lib/types";
+  import Chevron from "./Chevron.svelte";
   import Payload from "./Payload.svelte";
 
   type Node = {
@@ -180,50 +181,68 @@
   }
 </script>
 
+<!-- A branch is a group: its header row sticks to the top of the pane (offset
+     by one row per ancestor, so the whole path stays readable while scrolling)
+     and its children hang from an indent guide. Leaves are plain rows. -->
 {#snippet row(c: Node, depth: number)}
   {@const s = c.stats}
   {@const open = isOpen(c.path)}
   {@const selected = app.selectedTopic === c.path}
   {@const stale = s ? isStale(s, clock.now) : false}
-  <!-- svelte-ignore a11y_click_events_have_key_events -- keys are handled once, on the role="tree" container -->
-  <div
-    class={[
-      "flex items-center gap-1.5 h-7 pr-2 cursor-pointer transition-colors duration-300 accent outline-none",
-      selected ? "accent-on sel" : ["accent-off", app.flashing.has(c.path) ? "flash" : "hover:bg-ink/3"],
-      cursor === c.path && !selected && "tree-cursor",
-      stale && !selected && "opacity-50",
-    ]}
-    style="padding-left: {5 + depth * 14}px"
-    role="treeitem"
-    aria-level={depth + 1}
-    aria-selected={selected}
-    aria-expanded={c.children.length ? open : undefined}
-    tabindex="-1"
-    data-path={c.path}
-    onclick={() => activate(c)}
-  >
-    {#if c.children.length}
-      <button class="w-3 shrink-0 text-muted text-[10px] outline-none" tabindex="-1" title={open ? "Collapse" : "Expand"}
-              onclick={(e) => { e.stopPropagation(); cursor = c.path; toggle(c.path); }}>
-        {open ? "▾" : "▸"}
-      </button>
-    {:else}<span class="w-3 shrink-0"></span>{/if}
-    <span class="truncate shrink-0 max-w-[55%] {s ? 'text-ink' : 'text-ink/80'}">{c.name}</span>
-    <span class="flex-1 min-w-0 truncate text-right font-mono text-[11px] text-muted">
-      <Payload value={s?.last ?? null} max={60} />
-    </span>
-    {#if s?.retained}<span class="badge" title="retained">R</span>{/if}
-    {#if s}
+  {#if s}
+    <!-- svelte-ignore a11y_click_events_have_key_events -- keys are handled once, on the role="tree" container -->
+    <div
+      class={[
+        "tree-row accent",
+        selected ? "accent-on sel" : ["accent-off", app.flashing.has(c.path) ? "flash" : "hover:bg-ink/3"],
+        cursor === c.path && !selected && "tree-cursor",
+        stale && !selected && "opacity-50",
+      ]}
+      style="scroll-margin-top: {depth * 28}px"
+      role="treeitem"
+      aria-level={depth + 1}
+      aria-selected={selected}
+      tabindex="-1"
+      data-path={c.path}
+      onclick={() => activate(c)}
+    >
+      <span class="w-4 shrink-0"></span>
+      <span class="truncate shrink-0 max-w-[55%] text-ink">{c.name}</span>
+      <span class="flex-1 min-w-0 truncate text-right font-mono text-[11px] text-muted">
+        <Payload value={s.last} max={60} />
+      </span>
+      {#if s.retained}<span class="badge" title="retained">R</span>{/if}
       <span class="w-8 shrink-0 text-right text-[11px] tabular-nums text-muted"
             title="{fmtCount(s.count)} messages{stale ? ' · quiet for longer than usual' : ''}">
         {ago(s.lastSeen, clock.now)}
       </span>
-    {:else}
-      <span class="shrink-0 text-right text-[11px] tabular-nums text-muted" title="messages in this branch">{fmtCount(c.count)}</span>
-    {/if}
-  </div>
-  {#if open}
-    {#each c.children as k (k.path)}{@render row(k, depth + 1)}{/each}
+    </div>
+  {:else}
+    <div role="group" aria-label={c.name}>
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
+      <div
+        class={["tree-row tree-head accent accent-off", cursor === c.path && "tree-cursor", !open && "hover:bg-ink/3"]}
+        style="top: {depth * 28}px; z-index: {20 - depth}; scroll-margin-top: {depth * 28}px"
+        role="treeitem"
+        aria-level={depth + 1}
+        aria-selected={false}
+        aria-expanded={open}
+        tabindex="-1"
+        data-path={c.path}
+        onclick={() => activate(c)}
+      >
+        <span class="w-4 shrink-0 grid place-items-center text-muted"><Chevron {open} /></span>
+        <span class="truncate font-semibold text-ink/80">{c.name}</span>
+        <span class="tree-count" title="messages in this branch">{fmtCount(c.count)}</span>
+        <span class="flex-1"></span>
+        <span class="text-[11px] text-muted/70 tabular-nums" title="topics in this branch">{c.children.length}</span>
+      </div>
+      {#if open}
+        <div class="tree-kids">
+          {#each c.children as k (k.path)}{@render row(k, depth + 1)}{/each}
+        </div>
+      {/if}
+    </div>
   {/if}
 {/snippet}
 
@@ -249,7 +268,7 @@
     </button>
   </div>
 
-  <div bind:this={treeEl} class="tree flex-1 min-h-0 overflow-y-auto py-1 outline-none"
+  <div bind:this={treeEl} class="tree flex-1 min-h-0 overflow-y-auto outline-none"
        role="tree" aria-label="topics" tabindex="0" onkeydown={keys}>
     {#if !profileId}
       <div class="empty">
@@ -274,6 +293,7 @@
       </div>
     {:else}
       {#each tree.children as k (k.path)}{@render row(k, 0)}{/each}
+      <div class="h-1"></div>
     {/if}
   </div>
 

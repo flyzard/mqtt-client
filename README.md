@@ -57,7 +57,7 @@ task check    # vet, tests, type-check
 
 ## Contributing
 
-Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the checks to run and how contributions are licensed. [DESIGN.md](DESIGN.md) describes the visual system if you are touching the UI.
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the checks to run and how contributions are licensed.
 
 ## License
 

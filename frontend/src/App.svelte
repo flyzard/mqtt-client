@@ -22,8 +22,13 @@
   // Pane widths come from the persisted layout; the title strip shares the
   // template so its labels stay aligned. The inspector always keeps room.
   let innerWidth = $state(1280);
-  const treeMax = $derived(clamp(innerWidth - layout.sidebar.value - layout.inspectorMin, layout.tree.min, layout.tree.max));
-  const cols = $derived(`--grid-template-columns-panes: ${layout.sidebar.value}px ${layout.tree.value}px minmax(0, 1fr)`);
+  const sidebarOpen = $derived(layout.sidebarOpen.value);
+  const sidebarWidth = $derived(sidebarOpen ? layout.sidebar.value : layout.rail);
+  const treeMax = $derived(clamp(innerWidth - sidebarWidth - layout.inspectorMin, layout.tree.min, layout.tree.max));
+  const cols = $derived(`--grid-template-columns-panes: ${sidebarWidth}px ${layout.tree.value}px minmax(0, 1fr)`);
+  // The macOS traffic lights sit in the first 84px of the title strip; when the
+  // sidebar is folded to a rail the Topics label has to clear them instead.
+  const topicsPad = $derived(sidebarOpen ? 12 : Math.max(12, 84 - layout.rail));
 </script>
 
 <svelte:window bind:innerWidth />
@@ -33,8 +38,8 @@
        A barely-there wash of the connection colour, in the spirit of the hero gradient. -->
   <div class="h-10 shrink-0 grid grid-cols-panes items-end border-b border-line bg-linear-to-r from-(--brand)/6 to-transparent to-50%"
        style="--wails-draggable:drag">
-    <div class="eyebrow pl-[84px] pb-2">Connections</div>
-    <div class="eyebrow pl-3 pb-2">Topics</div>
+    <div class="eyebrow pl-[84px] pb-2 truncate">{sidebarOpen ? "Connections" : ""}</div>
+    <div class="eyebrow pb-2" style="padding-left: {topicsPad}px">Topics</div>
     <div class="pl-4 pr-4 pb-2 text-xs truncate font-mono text-muted" title={app.selectedTopic ?? ""}>
       {#each crumbs as part, i (i)}
         {#if i}<span class="text-ink/30">/</span>{/if}<span class={i === crumbs.length - 1 ? "text-ink" : ""}>{part}</span>
@@ -45,7 +50,9 @@
   <div class="flex-1 min-h-0 grid grid-cols-panes">
     <aside class="relative min-h-0 border-r border-line">
       <Sidebar />
-      <Resizer bind:value={layout.sidebar.value} min={layout.sidebar.min} max={layout.sidebar.max} reset={layout.sidebar.initial} />
+      {#if sidebarOpen}
+        <Resizer bind:value={layout.sidebar.value} min={layout.sidebar.min} max={layout.sidebar.max} reset={layout.sidebar.initial} />
+      {/if}
     </aside>
     <section class="relative min-h-0 border-r border-line">
       <TopicTree />

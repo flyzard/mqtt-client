@@ -71,4 +71,8 @@ export const layout = {
   inspectorMin: 420,
   /** Whether the publish bar shows its editor or only its header line. */
   publishOpen: new Pref("publish.open", true, isBool),
+  /** Whether the connections pane shows names or only a rail of status dots. */
+  sidebarOpen: new Pref("sidebar.open", true, isBool),
+  /** Width of the connections pane when folded to a rail. */
+  rail: 44,
 };

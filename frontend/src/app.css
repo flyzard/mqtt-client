@@ -196,6 +196,24 @@
   .resizer-on {
     @apply bg-ink/10;
   }
+  /* Topic tree rows. Branch headers stick to the top of the pane, stacking
+     one row per ancestor (the call site sets `top`), on an opaque cream so
+     rows scroll underneath; children hang from a hairline indent guide. */
+  .tree-row {
+    @apply flex items-center gap-1.5 h-7 pl-[5px] pr-2 cursor-pointer transition-colors duration-300 outline-none;
+  }
+  .tree-head {
+    @apply sticky bg-cream;
+    /* Cover sub-pixel seams above a stuck header on retina displays. */
+    box-shadow: 0 -1px 0 var(--color-cream);
+  }
+  .tree-kids {
+    /* The guide runs down from the centre of the 16px chevron box. */
+    @apply ml-[13px] pl-[7px] border-l border-line;
+  }
+  .tree-count {
+    @apply ml-1 px-1.5 rounded-full text-[10px] tabular-nums text-muted bg-ink/5;
+  }
   /* Keyboard cursor in the topic tree: a hairline inset outline, shown only
      while the tree has focus so mouse users never see it. */
   .tree:focus-within .tree-cursor {
